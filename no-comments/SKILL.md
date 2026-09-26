@@ -3,7 +3,7 @@ name: no-comments
 description: "Spawn Comment Sicko, fix accepted findings, and offer encodings for claimed constraints."
 ---
 
-> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).
 
 
 # No comments

@@ -3,7 +3,7 @@ name: principle-subtract-before-you-add
 description: "Apply when sequencing an addition, refactor, or rewrite. Remove dead code, redundant validators, and stub references first, then build on the simpler base."
 ---
 
-> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).
 
 
 # Subtract Before You Add

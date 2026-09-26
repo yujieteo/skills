@@ -3,7 +3,7 @@ name: unslop
 description: Cut AI tells from any writing. Must always apply.
 ---
 
-> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).
 
 
 # Unslop

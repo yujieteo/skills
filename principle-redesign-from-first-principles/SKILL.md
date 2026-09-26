@@ -3,7 +3,7 @@ name: principle-redesign-from-first-principles
 description: "Apply when integrating a new requirement into an existing design. Redesign as if the requirement had been a foundational assumption from day one, instead of bolting it on."
 ---
 
-> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).
 
 
 # Redesign From First Principles

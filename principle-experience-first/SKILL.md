@@ -3,7 +3,7 @@ name: principle-experience-first
 description: "Apply when product, UX, or feature-scope tradeoffs come up. Choose user delight over implementation convenience; ship fewer polished features over more rough ones."
 ---
 
-> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).
 
 
 # Experience First

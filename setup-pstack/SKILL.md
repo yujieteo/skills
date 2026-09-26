@@ -3,7 +3,7 @@ name: setup-pstack
 description: Configure the pstack workflow for the current agent host. Use when a user asks to set up pstack models, a pstack budget, or host-specific execution settings.
 ---
 
-> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).
 
 
 # Setup pstack

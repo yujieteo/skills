@@ -5,11 +5,11 @@ description: poteto's agent style for concise, detailed responses, deliberate su
 
 # Poteto mode
 
-## Codex runtime
+## Agent runtime
 
-Apply the pstack workflow to the tools the current Codex session exposes. A Cursor-only command, plugin, path, or subagent type is not a prerequisite. Use the closest available Codex capability, or skip the unavailable operation and retain the underlying verification or review goal.
+Read [the agent runtime mapping](references/agent-runtime.md). Apply the pstack workflow through capabilities exposed by Claude, Codex, or Cursor. Product-specific commands are adapters, not prerequisites.
 
-When this skill refers to `Task`, use the available collaboration tool. When it refers to `AskQuestion`, ask the user directly only for a decision that observation cannot settle. When it refers to `~/.cursor` configuration, do not write that path from Codex. When it names a model, choose only from models that this host actually exposes.
+When this skill refers to `Task`, use the available collaboration tool. When it refers to `AskQuestion`, ask the user only for a decision that observation cannot settle. When it names a model, choose only from models that the host exposes.
 
 ## Non-negotiables
 
@@ -29,7 +29,7 @@ Remaining triggers:
 - Before commit → run the available formatting and prose checks.
 - Before review → the **no-comments** skill (`/no-comments`).
 - Shipping UI, IDE, or CLI → use the matching control capability available on the host. For bug fixes, reproduce the problem on the same surface first.
-- Any PR-status request → the **Babysit** playbook (`playbooks/babysit.md`), and not Cursor's built-in babysit skill, whose description matches the same words. That includes "babysit this", "get it green", "address the bugbot comments", and the commonest phrasing, "check on PR X" / "anything outstanding on X". Never triggered by merely opening a PR. Declare its mode before polling. The playbook's step 1 owns the request-to-mode mapping. Reaching for `drive` inside a phase agent stops that agent finishing its turn.
+- Any PR-status request → the **Babysit** playbook (`playbooks/babysit.md`), not a host's generic babysit feature. That includes "babysit this", "get it green", "address the bugbot comments", "check on PR X", and "anything outstanding on X". Merely opening a PR does not trigger it. Declare its mode before polling.
 - Asked to land or ship a green stack → the **Shipping** playbook (`playbooks/shipping.md`). Green is not safe. Nothing gets armed before an independent per-PR verdict, and only the contiguous verified run from the root lands.
 - Bugbot or the agentic security review commented → skeptical posture. They catch real bugs and also file non-issues and nitpicks, so assess each on its merits and dismiss noise with a concrete reason instead of churning code. Triage fix / dismiss / ask per `references/bugbot-triage.md`.
 - Broken skill mid-task → fix it in its own commit. Don't block. Don't silently work around it.
@@ -79,19 +79,19 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 ## Autonomy
 
-**Just do it.** Use any MCP tool. Reversible work and external actions (team chat, ticket updates, kicking off evals) proceed without asking.
+Proceed with reversible work and in-scope external actions without asking.
 
 **Always pause** for irreversible writes: force-push to shared branches, deploys, data deletion, customer messages.
 
-**Session overrides:** "Don't stop" / "going to bed" / "run until done" / "be fully autonomous" → keep going.
+"Don't stop", "going to bed", or "run until done" means keep going.
 
-**No is an acceptable answer.** Asked whether to do something, invited to add scope, or shown an approach, reply with your real judgment. Decline, push back, or say "this doesn't earn its place" when true. A recommendation is a judgment, not a validation. Agreement is not the default, candor over sycophancy.
+Give real judgment. Decline weak ideas or added scope. A recommendation is not validation.
 
 ## Subagents
 
-Use the host's collaboration tool when delegation helps. Keep task scope narrow, pass file pointers instead of dumps, and choose only models the host exposes. The parent agent owns the final review.
+Delegate narrow tasks through the host. Pass file pointers, use exposed models, and own the final review.
 
-You own every subagent's work. Review the diff and write your own summary, don't pass through what it said. Interrupt-chained resumes silently drop directives, so fire a fresh subagent with consolidated scope rather than trusting a "done" summary. A second opinion is the same prompt against a different model. Agreement is high-signal.
+Review every delegated diff and write your own summary. Use a fresh task with consolidated scope after an interrupted resume. For a second opinion, give the same prompt to another model.
 
 ## Writing the reply
 
@@ -104,6 +104,7 @@ Write the reply clean as you draft it. A cleanup pass after drafting does not re
 - **Frame impact for the consumer and the maintainer.** Name who the work is for (an end user, a colleague importing the library) and what changes for them before any implementation detail. Then what the next engineer who owns this code inherits. If you can't say what either would notice, the work or the explanation is off.
 - **Never fabricate a link, citation, or transcript reference.** Link only artifacts you produced or read this session.
 - **Every claim carries its evidence or its label in the same sentence.** Measured, inferred, or guess. A prediction or an unseen cause is a guess. Never hand the human a check you could run.
+- **Optimize structured output for tokens.** Use TOON for repeated records when the consumer accepts text. Default to three or four useful fields. Truncate large values with the total size and a way to request the full value. Include totals, explicit zero-result states, and only the next commands that fit the current result.
 
 Every playbook ends with a reply written this way, PR link as `https://github.com/<owner>/<repo>/pull/<number>`. The per-playbook lines below name only the content unique to that playbook.
 
@@ -115,28 +116,28 @@ Comments follow the same rule as the reply. Write them clean as you go. Keep a c
 
 Open a todolist whose first items are the matched playbook's steps, copied in verbatim, before any task-specific todos. A step you choose not to do stays in the list with a one-line `skip: <reason>`. Match the task to a playbook below, open its file, and copy its steps in verbatim.
 
-A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
+A large cross-cutting run, or one without a matching playbook, routes to **figure-it-out**. A project-scale program that outlives one agent session routes to **Orchestrate**.
 
-- **Investigation.** Read-only question: how does X work, why was Y built this way, are we sure about Z, should we do X or Y. `playbooks/investigation.md`.
-- **Bug fix.** A reported defect to reproduce, root-cause, and fix with runtime evidence. `playbooks/bug-fix.md`.
-- **Perf issue.** A measured slowness to trace and improve against a baseline. `playbooks/perf-issue.md`.
-- **Hillclimb.** Sustained, scientific improvement of one metric against a target: loop hypotheses with before/after measurement, a decision log, and one commit per accepted win. Distinct from Perf issue, which is a one-off fix. `playbooks/hillclimb.md`.
-- **Runtime forensics.** Diagnose a runtime symptom (leak, idle-CPU spin, glitch) from live instrumentation. The deliverable is a diagnosis, not a fix. `playbooks/runtime-forensics.md`.
-- **Trace forensics.** Diagnose a captured profiling artifact (cpuprofile, trace, spindump, heap snapshot) handed to you after the fact. The deliverable is a diagnosis, not a fix. `playbooks/trace-forensics.md`.
-- **Feature.** New or changed behavior, built from a named data shape. `playbooks/feature.md`.
-- **Refactoring.** A behavior-preserving change to structure or shape (rename, extract, inline, dedupe, move). `playbooks/refactoring.md`.
-- **Prototype.** A throwaway sketch to make a design or behavioral decision cheaply, or to settle an empirical fork by observing it instead of asking the human ("prototype", "mock it up", "try this layout", "sketch it to decide"). `playbooks/prototype.md`.
-- **Visual parity.** Pixel-exact UI equivalence: matching two implementations or migrating a styling system. `playbooks/visual-parity.md`.
-- **Authoring or modifying a skill.** Writing or editing a SKILL.md. `playbooks/authoring-a-skill.md`.
-- **Eval.** Testing how a skill, structure, or prompt change affects agent behavior before promoting it. `playbooks/eval.md`.
-- **Babysit.** Driving a PR or a stack to merge-ready: conflicts, review threads, CI. `playbooks/babysit.md`.
-- **Shipping.** The half after Babysit. Independently verifying a green stack, then landing the contiguous verified run bottom-up through `gh` by default or Origin when its CLI is available. `playbooks/shipping.md`.
-- **Autonomous run.** A long task to drive to completion without stopping ("run until done", "/loop until X"). `playbooks/autonomous-run.md`.
-- **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens to hundreds of subagents, minimal human turns ("run this whole project", "own this migration until it lands"). Distinct from Autonomous run, which drives one task to a predicate. Work one agent could finish inside the session's budget routes there, not here, however program-shaped the phrasing sounds. `playbooks/orchestrate.md`.
-- **Autopilot-full.** A queue of independent PRs run to merged with full autonomy. One owner per PR carries build through merge, and the root swarm-verifies each PR before its owner merges ("autopilot this queue", "full autopilot", one-owner-per-PR programs). `playbooks/autopilot-full.md`.
-- **Autopilot-stack.** A queue of changes built and verified with full autonomy, delivered as one linear reviewed base-branch stack the operator lands ("autopilot-stack", "stack them, don't ship", "build the stack, I'll land it"). `playbooks/autopilot-stack.md`.
-- **Session pickup.** Resuming or taking over a prior agent's in-flight work from a transcript, cloud-agent URL, or pushed branch. `playbooks/session-pickup.md`.
-- **Pause safely.** Suspending in-flight work cleanly so it can be resumed, on an explicit pause, going offline, a Cursor restart, or imminent context compaction. The complement to Session pickup. Full steps: `playbooks/pause-safely.md`.
-- **Multi-phase or multi-PR plan.** Work that spans phases or stacked PRs. `playbooks/multi-phase-plan.md`.
-- **Worktree and simulator cleanup.** Reclaiming local disk by pruning merged or abandoned git worktrees and stale iOS simulators ("what's using my disk", "clean up worktrees", "prune safe-to-prune worktrees", "free up space", "delete old simulators"). `playbooks/worktree-cleanup.md`.
-- **Opening a PR.** Invoked at the end of every other playbook. `playbooks/opening-a-pr.md`.
+- **Investigation.** Read-only architecture or choice. `playbooks/investigation.md`.
+- **Bug fix.** Reproduce and fix a defect. `playbooks/bug-fix.md`.
+- **Perf issue.** Improve measured slowness. `playbooks/perf-issue.md`.
+- **Hillclimb.** Repeatedly improve one metric. `playbooks/hillclimb.md`.
+- **Runtime forensics.** Diagnose a live runtime symptom. `playbooks/runtime-forensics.md`.
+- **Trace forensics.** Diagnose a captured profile or trace. `playbooks/trace-forensics.md`.
+- **Feature.** Add behavior from a named data shape. `playbooks/feature.md`.
+- **Refactoring.** Preserve behavior while changing structure. `playbooks/refactoring.md`.
+- **Prototype.** Settle a design through a throwaway build. `playbooks/prototype.md`.
+- **Visual parity.** Match two interfaces pixel for pixel. `playbooks/visual-parity.md`.
+- **Skill authoring.** Write or edit a skill. `playbooks/authoring-a-skill.md`.
+- **Eval.** Test a skill or prompt before promotion. `playbooks/eval.md`.
+- **Babysit.** Drive pull requests to merge-ready. `playbooks/babysit.md`.
+- **Shipping.** Verify and land a green stack. `playbooks/shipping.md`.
+- **Autonomous run.** Continue one task to a predicate. `playbooks/autonomous-run.md`.
+- **Orchestrate.** Coordinate a multi-session program. `playbooks/orchestrate.md`.
+- **Autopilot-full.** Build and merge independent pull requests. `playbooks/autopilot-full.md`.
+- **Autopilot-stack.** Build one reviewed stack without landing it. `playbooks/autopilot-stack.md`.
+- **Session pickup.** Resume prior agent work. `playbooks/session-pickup.md`.
+- **Pause safely.** Preserve resumable state. `playbooks/pause-safely.md`.
+- **Multi-phase plan.** Plan phased or stacked delivery. `playbooks/multi-phase-plan.md`.
+- **Worktree cleanup.** Reclaim worktree or simulator disk. `playbooks/worktree-cleanup.md`.
+- **Opening a PR.** Finish every change playbook. `playbooks/opening-a-pr.md`.

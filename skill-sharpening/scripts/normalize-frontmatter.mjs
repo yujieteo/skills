@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const repository = resolve(process.argv[2]);
+const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+const repository = resolve(process.argv[2] ?? dirname(dirname(scriptDirectory)));
 const unsupported = /^(?:disable-model-invocation|argument-hint|mode|icon|color|reminder):.*\n/gm;
 const pstackSkills = new Set([
   "architect", "arena", "automate-me", "blast-radius", "bro", "create-verification-skill",
@@ -21,7 +23,8 @@ const pstackSkills = new Set([
   "principle-sequence-verifiable-units", "principle-subtract-before-you-add",
   "principle-test-behavior-not-implementation", "principle-type-system-discipline",
 ]);
-const codexNotice = "> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.\n\n";
+const legacyRuntimeNotice = "> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.\n\n";
+const agentRuntimeNotice = "> Host actions: [agent runtime](../poteto-mode/references/agent-runtime.md).\n\n";
 
 for (const entry of readdirSync(repository, { withFileTypes: true })) {
   if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
@@ -31,14 +34,16 @@ for (const entry of readdirSync(repository, { withFileTypes: true })) {
   const original = readFileSync(skillPath, "utf8");
   const explicitOnly = /^disable-model-invocation:\s*true\s*$/m.test(original);
   let normalized = original.replace(unsupported, "");
+  normalized = normalized.replaceAll(legacyRuntimeNotice, agentRuntimeNotice);
+  normalized = normalized.replaceAll(`${agentRuntimeNotice}\n${agentRuntimeNotice}`, agentRuntimeNotice);
   if (entry.name === "typescript-best-practices") {
     normalized = normalized.replace(/^paths:.*\n/m, "");
   }
   if (entry.name === "poteto-mode") {
     normalized = normalized.replace(/^name:\s*Poteto Mode\s*$/m, "name: poteto-mode");
   }
-  if (pstackSkills.has(entry.name) && !normalized.includes(codexNotice.trim())) {
-    normalized = normalized.replace(/^(---\n[\s\S]*?\n---\n)/, `$1\n${codexNotice}`);
+  if (pstackSkills.has(entry.name) && !normalized.includes(agentRuntimeNotice.trim())) {
+    normalized = normalized.replace(/^(---\n[\s\S]*?\n---\n)/, `$1\n${agentRuntimeNotice}`);
   }
   if (normalized !== original) writeFileSync(skillPath, normalized);
 

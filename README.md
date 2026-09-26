@@ -19,3 +19,19 @@ git clone git@github.com:yujieteo/skills.git ~/.codex/skills
 ```
 
 OpenAI-managed system skills are intentionally excluded and remain under the local `.system/` directory.
+
+## Poteto Mode tools
+
+Poteto Mode works in Claude, Codex, and Cursor. Its optional orchestration and GitHub watcher tools use Bun and TypeScript. Run the setup for your platform:
+
+```sh
+poteto-mode/scripts/setup.sh
+```
+
+On native Windows, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\poteto-mode\scripts\setup.ps1
+```
+
+Both scripts install Bun after confirmation, install locked dependencies, and verify the tools. See [the runtime setup guide](poteto-mode/references/runtime-setup.md) for check-only and non-interactive modes.

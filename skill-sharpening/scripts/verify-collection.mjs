@@ -8,10 +8,12 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repository = resolve(process.argv[2] ?? dirname(dirname(scriptDirectory)));
 const allowedKeys = new Set(["name", "description", "allowed-tools", "license", "metadata"]);
 const problems = [];
+const DESCRIPTION_WORD_LIMIT = 60;
+const ENTRYPOINT_WORD_LIMIT = 2000;
 
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.name === ".git" || entry.name === ".system") return [];
+    if ([".git", ".system", "node_modules", ".firecrawl", "dist", "build"].includes(entry.name)) return [];
     const target = join(directory, entry.name);
     return entry.isDirectory() ? walk(target) : [target];
   });
@@ -39,6 +41,14 @@ for (const skillPath of walk(repository).filter((file) => basename(file) === "SK
     if (!allowedKeys.has(key)) problems.push(`${skillPath}: unsupported frontmatter key ${key}`);
   }
   if (!fields.name || !fields.description) problems.push(`${skillPath}: name and description are required`);
+  const descriptionWords = (fields.description ?? "").split(/\s+/).filter(Boolean).length;
+  if (descriptionWords > DESCRIPTION_WORD_LIMIT) {
+    problems.push(`${skillPath}: description has ${descriptionWords} words; limit is ${DESCRIPTION_WORD_LIMIT}`);
+  }
+  const entrypointWords = content.split(/\s+/).filter(Boolean).length;
+  if (entrypointWords > ENTRYPOINT_WORD_LIMIT) {
+    problems.push(`${skillPath}: entrypoint has ${entrypointWords} words; limit is ${ENTRYPOINT_WORD_LIMIT}; use progressive disclosure`);
+  }
   if (fields.name && fields.name !== basename(dirname(skillPath))) {
     problems.push(`${skillPath}: name ${fields.name} does not match its directory`);
   }
@@ -57,4 +67,6 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log("Skill collection is valid.");
+console.log(`status: valid`);
+console.log(`skills: ${walk(repository).filter((file) => basename(file) === "SKILL.md").length}`);
+console.log(`limits: description<=${DESCRIPTION_WORD_LIMIT} entrypoint<=${ENTRYPOINT_WORD_LIMIT}`);

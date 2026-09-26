@@ -1,6 +1,6 @@
 ---
 name: regret-minimizer-microblog
-description: Mine an existing notes corpus for avoidable future regret, exploration-versus-exploitation mistakes, cheap durable wins, and one major focus action; track experiments through linked TODO/result notes and publish a general-audience microblog post when a clear durable thesis emerges. Use for regret reviews, deciding what to explore or exploit, turning accumulated notes into measurable action, or synthesizing a recurring decision pattern for publication.
+description: Mine notes for avoidable regret, exploration mistakes, durable wins, and one focus action. Track experiments through linked TODO and result notes. Publish a general-audience microblog post when a durable thesis emerges. Use for regret reviews, exploration decisions, or recurring decision patterns.
 ---
 
 # Regret minimizer microblog
