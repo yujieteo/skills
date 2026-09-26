@@ -1,8 +1,10 @@
 ---
 name: interrogate
 description: "Use for \"interrogate\", \"adversarial review\", \"multi-model review\", \"challenge this\", \"stress test this code\", \"find blind spots\", or \"tear this apart\". Multiple LLM reviewers challenge changes from independent angles."
-disable-model-invocation: true
 ---
+
+> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+
 
 # Interrogate
 

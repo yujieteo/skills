@@ -1,8 +1,10 @@
 ---
 name: unslop
 description: Cut AI tells from any writing. Must always apply.
-disable-model-invocation: true
 ---
+
+> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+
 
 # Unslop
 

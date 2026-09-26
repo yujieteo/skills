@@ -1,8 +1,10 @@
 ---
 name: arena
 description: "Spawn N parallel candidates at the same task, pick a base, graft the strongest parts of the losers into it. Use for /arena, 'arena this', 'throw it in the arena', or when one attempt at a non-trivial artifact would lock in the wrong shape."
-disable-model-invocation: true
 ---
+
+> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+
 
 # Arena
 

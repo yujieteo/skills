@@ -40,4 +40,14 @@ The following skills were developed separately in this local collection:
 - `regret-minimizer-microblog`
 - `skill-sharpening`
 
+## Lauren Tan's pstack-derived collection
+
+The following skills, the `poteto-mode` playbooks, and the `principle-*` skills are adapted from [pstack in Cursor's public plugins repository](https://github.com/cursor/plugins/tree/main/pstack), authored by Lauren Tan (`@poteto`) and licensed under MIT:
+
+- `architect`, `arena`, `automate-me`, `blast-radius`, `bro`, `create-verification-skill`, `figure-it-out`, `how`, `interrogate`, `maintain-verification-skill`, `make-bot-ui`, `no-comments`, `recall`, `reflect`, `setup-pstack`, `show-me-your-work`, `swarm`, `tdd`, `technical-writing`, `typescript-best-practices`, `unslop`, and `why`
+- `poteto-mode` and its playbooks, references, and scripts
+- every `principle-*` skill
+
+The local import did not preserve its source revision. [`PSTACK-UPSTREAM.md`](PSTACK-UPSTREAM.md) records the verified upstream source and license. Do not claim that this local copy matches a specific upstream commit. This collection changes Cursor-specific runtime instructions where Codex exposes different capabilities.
+
 Update this file whenever provenance becomes more precise or a skill changes lineage.

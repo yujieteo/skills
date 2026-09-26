@@ -6,6 +6,8 @@ This is my working collection of agent skills: small, opinionated instructions r
 
 Much of the collection began with or was adapted from [Matt Pocock's Skills for Real Engineers](https://github.com/mattpocock/skills). Matt deserves the majority of the credit for that initial body of work and its core ideas. His repository explicitly encourages users to adapt the skills, and it is distributed under the MIT License.
 
+The pstack skills, playbooks, and principles are adapted from [Lauren Tan's pstack](https://github.com/cursor/plugins/tree/main/pstack). Lauren created the engineering workflow behind Poteto Mode. The pstack material is MIT licensed and carries her copyright notice.
+
 The versions here are independently maintained derivatives shaped to my preferences. Skills I wrote independently sit beside those derivatives; [`PROVENANCE.md`](PROVENANCE.md) records the distinction as accurately as the available history permits.
 
 ## Installation

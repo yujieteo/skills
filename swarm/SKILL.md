@@ -1,8 +1,10 @@
 ---
 name: swarm
 description: "Fan out N parallel workers, drain them, and return one report. Use for /swarm, 'swarm this', or parallel coverage, races, gauntlets, and exploration."
-disable-model-invocation: true
 ---
+
+> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+
 
 # Swarm
 

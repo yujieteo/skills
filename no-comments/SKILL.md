@@ -1,8 +1,10 @@
 ---
 name: no-comments
 description: "Spawn Comment Sicko, fix accepted findings, and offer encodings for claimed constraints."
-disable-model-invocation: true
 ---
+
+> Read [the pstack Codex runtime](../poteto-mode/references/codex-runtime.md) before acting on host-specific instructions.
+
 
 # No comments
 
