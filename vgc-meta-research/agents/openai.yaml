@@ -1,0 +1,4 @@
+interface:
+  display_name: "VGC Meta Research"
+  short_description: "Research and publish evidence-based VGC meta notes"
+  default_prompt: "Research the current VGC metagame through tournament data and VGC fundamentals, then publish verified atomic notes."
