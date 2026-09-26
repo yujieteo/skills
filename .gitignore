@@ -1,0 +1,7 @@
+.system/
+.DS_Store
+**/.DS_Store
+.firecrawl/
+*.tmp
+*.swp
+*~

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Internalise Computation"
+  short_description: "Build mental ladders for advanced computations"
+  default_prompt: "Build and publish a concise mental-computation ladder for this target."

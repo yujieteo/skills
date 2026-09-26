@@ -1,0 +1,4 @@
+interface:
+  display_name: "Regret Minimizer Microblog"
+  short_description: "Turn notes into regret-minimizing actions and posts"
+  default_prompt: "Review my notes for avoidable regret, choose practical actions, and publish a general-audience post when a durable thesis emerges."

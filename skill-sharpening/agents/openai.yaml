@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Sharpening"
+  short_description: "Refine and publish an idiosyncratic skill collection"
+  default_prompt: "Sharpen my canonical Codex skills collection, publish it, and keep the local installation synchronized."
