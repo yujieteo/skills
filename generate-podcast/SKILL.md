@@ -86,8 +86,14 @@ The goal is comprehensible speech, not a faithful TeX render.
   uv pip install -r requirements.txt -r <podcast-requirements-file>
   ```
 
-  `uv` is optional; `python3.13 -m venv .venv` plus the same `pip install`
-  lines produce an equivalent environment. The pipeline needs
+  `uv` is optional:
+
+  ```sh
+  python3.13 -m venv .venv
+  .venv/bin/python -m pip install -r requirements.txt -r <podcast-requirements-file>
+  ```
+
+  The pipeline needs
   `kokoro>=0.9.4`, `espeakng-loader==0.2.4`, `soundfile>=0.12`,
   `lameenc>=1.7`, and `numpy>=1.26`. The first synthesis downloads the Kokoro
   model.
