@@ -35,10 +35,12 @@ The following skills were developed separately in this local collection:
 
 - `append-review-notes`
 - `generate-podcast`
+- `generate-slide-deck`
 - `generate-visualization`
 - `grilling`
 - `internalise-computation`
 - `math-source-hunter`
+- `presentation-coach`
 - `regret-minimizer-microblog`
 - `skill-sharpening`
 - `vgc-meta-research`
