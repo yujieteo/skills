@@ -34,11 +34,14 @@ This classification is based on the common installation cohort and matching upst
 The following skills were developed separately in this local collection:
 
 - `append-review-notes`
+- `generate-visualization`
 - `grilling`
 - `internalise-computation`
 - `math-source-hunter`
 - `regret-minimizer-microblog`
 - `skill-sharpening`
+- `vgc-meta-research`
+- `write-metarational-blogpost`
 
 ## Lauren Tan's pstack-derived collection
 
