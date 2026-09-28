@@ -66,7 +66,7 @@ node skill-sharpening/scripts/verify-collection.mjs
 
 It checks YAML frontmatter, that each `name` matches its directory, description and entrypoint length limits, and unresolved local links across every `SKILL.md`. It reads only; it changes nothing.
 
-To exercise the Poteto Mode helpers, verify the existing toolchain without changing it:
+To exercise the Poteto Mode helpers without changing the toolchain:
 
 ```sh
 poteto-mode/scripts/setup.sh --check
