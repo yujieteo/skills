@@ -38,8 +38,8 @@ uv pip install --python .venv/bin/python -r generate-explainer-video/requirement
 
 `python3.13 -m venv .venv && .venv/bin/python -m pip install -r ...` works
 without `uv`. Use a local virtual environment, never a global install. The
-first synthesis downloads the Kokoro model and a spaCy English model; keep the
-network available once. Only text is drawn, so no LaTeX install is needed.
+first synthesis downloads the Kokoro model; keep the network available
+once. Only text is drawn, so no LaTeX install is needed.
 `ffmpeg -version` and `.venv/bin/manim --version` confirm the toolchain.
 
 ## Workflow
