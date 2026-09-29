@@ -150,63 +150,14 @@ yujieteo/site/                        # sibling repo, checked out alongside
 8. **Regenerate `visuals/index.html`** (the gallery) by scanning every
    `viz/*/index.html` for its title/summary.
 
-9. **In `yujieteo/site`, write or update `data/visuals/<slug>.yaml`:**
-   ```yaml
-   slug: <slug>
-   title: ...
-   summary: ...
-   source_url: ...
-   fetched: <ISO 8601 date>
-   html_path: viz/<slug>/index.html   # relative to the visuals repo checkout
-   data_path: data/<slug>/raw.csv     # relative to the visuals repo checkout
-   webmcp_tools: [get_data, get_metadata, query]   # add any viz-specific tool
-   ```
-   Validate it against `schema/visualization.schema.json`. If the schema file
-   doesn't exist yet, create it (JSON Schema for the fields above) before
-   proceeding.
+9. **Integrate into `yujieteo/site`.** Write or update `data/visuals/<slug>.yaml`,
+   validate it against `schema/visualization.schema.json`, and make sure
+   `scripts/build.py` handles the `visualization` kind. Read
+   [references/site-integration.md](references/site-integration.md) for the stub,
+   the schema fallback, and the exact build-script behaviour.
 
-10. **Extend `scripts/build.py`** (one time, if not already done) to, on every
-   run:
-   - Read and validate every `data/visuals/*.yaml`.
-   - Copy the referenced `html_path` (from the sibling `visuals` checkout)
-     verbatim into `site/visuals/<slug>/index.html` — relocate only, never
-     re-render.
-   - Copy or convert the referenced `data_path` into
-     `site/visuals/<slug>/data.json` (the always-working, headless-LLM-facing
-     copy of the data, independent of WebMCP).
-   - Regenerate `site/visuals/index.html` (human-facing gallery, in the site's
-     existing template/header/footer style).
-   - Regenerate `site/visuals.md` — one entry per visualization:
-     ```
-     ## <title>
-     <one-line summary>
-     - HTML: https://teoyujie.org/visuals/<slug>/index.html
-     - Data: https://teoyujie.org/visuals/<slug>/data.json
-     - Fetched: <date>
-     - WebMCP tools: get_data, get_metadata, query[, <viz-specific tool>]
-     ```
-   - Append/refresh a `kind: "visualization"` record per stub into
-     `site/corpus.json`:
-     ```json
-     {
-       "id": "visualization:<slug>",
-       "kind": "visualization",
-       "title": "...",
-       "summary": "...",
-       "content": "...",
-       "contentHtml": "<p>...</p>",
-       "url": "visuals/<slug>/index.html",
-       "tags": ["..."],
-       "category": "...",
-       "revision": "<content hash, same convention as other records>",
-       "dataUrl": "visuals/<slug>/data.json",
-       "fetched": "<ISO date>",
-       "webmcpTools": ["get_data", "get_metadata", "query"]
-     }
-     ```
-   - Ensure `site/llms.txt` has one line under "Main pages" pointing at
-     `https://teoyujie.org/visuals.html` (add it once; do not duplicate on
-     subsequent runs).
+10. **Extend `scripts/build.py`** once if it lacks the `visualization` kind;
+    the behaviour is in the step 9 reference.
 
 11. **Run the site's build from its repo root:**
     ```
@@ -225,25 +176,12 @@ yujieteo/site/                        # sibling repo, checked out alongside
     `index.html` and fix anything it flags. Do not silently substitute another
     branch name in either repo.
 
-13. **Deploy** `yujieteo/site`'s generated output over SCP, following the exact
-    pattern used by `publish-site-notes`:
-    ```
-    scp site/corpus.json <ssh-target>:<document-root>/<unique-corpus-temp-name>
-    scp site/visuals/<slug>/index.html <ssh-target>:<document-root>/<unique-viz-temp-name>
-    scp site/visuals/<slug>/data.json <ssh-target>:<document-root>/<unique-data-temp-name>
-    scp site/visuals/index.html <ssh-target>:<document-root>/<unique-gallery-temp-name>
-    scp site/visuals.md <ssh-target>:<document-root>/<unique-visualsmd-temp-name>
-    scp site/llms.txt <ssh-target>:<document-root>/<unique-llmstxt-temp-name>   # only if changed
-    ssh <ssh-target> '<verify all checksums; preserve current files; rename corpus.json first, then the rest>'
-    ```
-    Replace the placeholders at runtime. Do not commit their resolved values.
-    Deploy `corpus.json` first, as in the existing skill.
+13. **Deploy** `yujieteo/site`'s generated output over SCP. Follow
+    [references/deploy.md](references/deploy.md) exactly; deploy `corpus.json`
+    first and never commit resolved placeholder values.
 
-14. **Verify**: compare local and remote checksums, then fetch the public HTTPS
-    pages (`visuals/<slug>/`, `visuals/`, `visuals.md`, `corpus.json`, and
-    `llms.txt` if changed) and confirm the new or refreshed visualization is
-    served correctly. Restore the preserved prior files if any deployed
-    artifact is corrupt or incomplete.
+14. **Verify** local and remote checksums and the public pages, per the same
+    reference. Restore preserved files if any deployed artifact is bad.
 
 15. **Report**: the commit(s), pushed branch(es), deployed files, verification
     result, and the data's `fetched` date (for staleness visibility). Mention

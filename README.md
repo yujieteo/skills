@@ -12,7 +12,11 @@ Each top-level directory is one skill, anchored by a `SKILL.md` with YAML frontm
 - `assets/` and `examples/` — templates a skill copies from, and finished worked outputs that show what the skill produces, such as `generate-slide-deck/assets/deck-shell.html` and `generate-slide-deck/examples/fpl-early-season/`.
 - Named documents the skill points to, such as `poteto-mode/playbooks/`, `domain-modeling/ADR-FORMAT.md`, and `wizard/template.sh`.
 
+`skills-router/` is the short entry point: one table that maps a task type to the single skill that fits, so an agent loads one skill instead of scanning all of them. Add a row there when you add a skill. Skills keep their bulky, situational material in `references/` or `playbooks/` and link to it, so the always-loaded `SKILL.md` stays small.
+
 `poteto-mode/` is the largest subtree, with its own scripts, references, and playbooks. `skill-sharpening/` holds the collection validator and frontmatter normalizer used by the daily automation.
+
+Repository-level files sit at the root: `README.md`, [`CONTRIBUTING.md`](CONTRIBUTING.md), `LICENSE`, the two provenance records, and `.github/` for CI and the pull request template. Skill directories stay flat at the top level because the repository is installed as `~/.codex/skills`.
 
 ## Lineage and credit
 
