@@ -1,0 +1,15 @@
+{
+  "skill": "grilling",
+  "cases": [
+    {
+      "id": "grilling-first-round",
+      "prompt": "Grill me: I want to move our monolith's background jobs from cron to a Temporal cluster next quarter.",
+      "assertions": [
+        "The reply asks numbered questions (Q1, Q2, ...).",
+        "Each question comes with a recommended answer.",
+        "The reply stops and waits for the user's answers instead of producing a finished plan.",
+        "The reply does not ask the user for facts an agent could look up itself, such as how many cron entries exist, without offering to find them."
+      ]
+    }
+  ]
+}

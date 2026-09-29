@@ -1,0 +1,22 @@
+{
+  "skill": "principle-fix-root-causes",
+  "cases": [
+    {
+      "id": "root-cause-nil-guard",
+      "prompt": "Our worker crashes with `TypeError: Cannot read properties of undefined (reading 'id')` in processOrder(order) about once a day. Can I just add `if (!order) return;` at the top?",
+      "assertions": [
+        "The reply advises against adding the guard as the fix, calling it a symptom fix or equivalent.",
+        "The reply recommends reproducing the crash or instrumenting (logging) to find out why order is undefined.",
+        "The reply suggests tracing where processOrder is called with an undefined order."
+      ]
+    },
+    {
+      "id": "root-cause-restart",
+      "prompt": "The desktop app works fine until the user restarts it, then the settings screen shows blank. Where should I look first?",
+      "assertions": [
+        "The reply points first at persisted state such as config files, caches, lock files, or serialized settings.",
+        "The reply suggests clearing or inspecting that state to confirm the cause."
+      ]
+    }
+  ]
+}

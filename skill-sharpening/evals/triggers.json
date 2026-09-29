@@ -1,0 +1,335 @@
+{
+  "_comment": "Each case: a user request and the skill(s) that should load. An empty expect list means no skill should load.",
+  "cases": [
+    {
+      "id": "how-auth-flow",
+      "prompt": "Walk me through how the login request flows from the React form to the session cookie in this repo.",
+      "expect": [
+        "how"
+      ]
+    },
+    {
+      "id": "how-placement",
+      "prompt": "Which package should own the new rate limiter, api-gateway or core?",
+      "expect": [
+        "how"
+      ]
+    },
+    {
+      "id": "why-design",
+      "prompt": "Why did we pick SQLite over Postgres for the sync service? Dig up the history.",
+      "expect": [
+        "why"
+      ]
+    },
+    {
+      "id": "recall-catch-up",
+      "prompt": "Catch me up, what was I working on yesterday in this repo?",
+      "expect": [
+        "recall"
+      ]
+    },
+    {
+      "id": "research-api",
+      "prompt": "Research what the current Stripe webhook retry policy is and write it up in a markdown file.",
+      "expect": [
+        "research"
+      ]
+    },
+    {
+      "id": "teach-concept",
+      "prompt": "Teach me how CRDTs work, I want to actually understand them.",
+      "expect": [
+        "teach"
+      ]
+    },
+    {
+      "id": "bro-plain",
+      "prompt": "bro what? say that again like a normal person",
+      "expect": [
+        "bro",
+        "wait-what"
+      ]
+    },
+    {
+      "id": "wait-what",
+      "prompt": "Wait, I didn't follow any of that. Re-pitch it.",
+      "expect": [
+        "wait-what",
+        "bro"
+      ]
+    },
+    {
+      "id": "grill-plan",
+      "prompt": "Grill me on this migration plan before I commit to it.",
+      "expect": [
+        "grill-me",
+        "grilling",
+        "grill-with-docs"
+      ]
+    },
+    {
+      "id": "domain-adr",
+      "prompt": "Let's record an ADR for switching the queue from SQS to Redis streams.",
+      "expect": [
+        "domain-modeling",
+        "grill-with-docs"
+      ]
+    },
+    {
+      "id": "architect-types",
+      "prompt": "Before writing any code, sketch the types and module layout for the new billing service.",
+      "expect": [
+        "architect",
+        "codebase-design"
+      ]
+    },
+    {
+      "id": "prototype-ui",
+      "prompt": "Throw together a quick throwaway prototype so I can feel whether this drag-to-reorder UI works.",
+      "expect": [
+        "prototype"
+      ]
+    },
+    {
+      "id": "to-spec",
+      "prompt": "Turn what we just discussed into a spec on the issue tracker.",
+      "expect": [
+        "to-spec"
+      ]
+    },
+    {
+      "id": "to-tickets",
+      "prompt": "Break this plan into tickets with their blocking dependencies.",
+      "expect": [
+        "to-tickets"
+      ]
+    },
+    {
+      "id": "wayfinder-big",
+      "prompt": "This rewrite is way bigger than one session. Map it out as decision tickets so we can work through it over weeks.",
+      "expect": [
+        "wayfinder"
+      ]
+    },
+    {
+      "id": "questionnaire",
+      "prompt": "I need to ask our DBA some questions about replication before I decide. Make a doc they can fill in.",
+      "expect": [
+        "to-questionnaire"
+      ]
+    },
+    {
+      "id": "implement-spec",
+      "prompt": "Implement tickets 3 through 5 from the spec.",
+      "expect": [
+        "implement"
+      ]
+    },
+    {
+      "id": "tdd-regression",
+      "prompt": "Write a failing regression test for the off-by-one in paginate() first, then fix it.",
+      "expect": [
+        "tdd"
+      ]
+    },
+    {
+      "id": "diagnose-slow",
+      "prompt": "The dashboard got 4x slower after last week's deploy. Diagnose it.",
+      "expect": [
+        "diagnosing-bugs"
+      ]
+    },
+    {
+      "id": "blast-radius",
+      "prompt": "What else could this one-line change to the date parser break?",
+      "expect": [
+        "blast-radius"
+      ]
+    },
+    {
+      "id": "merge-conflict",
+      "prompt": "My rebase stopped with conflicts in three files, sort it out.",
+      "expect": [
+        "resolving-merge-conflicts"
+      ]
+    },
+    {
+      "id": "ts-edit",
+      "prompt": "Add a discriminated union for the payment states in src/payments/state.ts.",
+      "expect": [
+        "typescript-best-practices",
+        "principle-type-system-discipline"
+      ]
+    },
+    {
+      "id": "wizard",
+      "prompt": "Make an interactive script that walks me through creating the AWS IAM role and pasting the secrets into GitHub.",
+      "expect": [
+        "wizard"
+      ]
+    },
+    {
+      "id": "code-review",
+      "prompt": "Review my branch against main before I open the PR.",
+      "expect": [
+        "code-review"
+      ]
+    },
+    {
+      "id": "interrogate",
+      "prompt": "Tear this diff apart with an adversarial multi-model review.",
+      "expect": [
+        "interrogate"
+      ]
+    },
+    {
+      "id": "no-comments",
+      "prompt": "Audit the comments in my diff before review.",
+      "expect": [
+        "no-comments"
+      ]
+    },
+    {
+      "id": "handoff",
+      "prompt": "Compact this session into a handoff doc so another agent can pick it up.",
+      "expect": [
+        "handoff"
+      ]
+    },
+    {
+      "id": "reflect",
+      "prompt": "reflect",
+      "expect": [
+        "reflect"
+      ]
+    },
+    {
+      "id": "swarm",
+      "prompt": "Swarm this: have parallel workers check every API route for missing auth.",
+      "expect": [
+        "swarm"
+      ]
+    },
+    {
+      "id": "arena",
+      "prompt": "Throw it in the arena, I want several attempts at the landing page and the best parts merged.",
+      "expect": [
+        "arena"
+      ]
+    },
+    {
+      "id": "unslop",
+      "prompt": "Clean the AI tells out of this paragraph for my blog.",
+      "expect": [
+        "unslop"
+      ]
+    },
+    {
+      "id": "tech-writing",
+      "prompt": "Write the README section explaining how to configure the CLI.",
+      "expect": [
+        "technical-writing"
+      ]
+    },
+    {
+      "id": "writing-for-agents",
+      "prompt": "Update our CLAUDE.md so agents stop running the full test suite.",
+      "expect": [
+        "writing-for-agents"
+      ]
+    },
+    {
+      "id": "visualization",
+      "prompt": "Pull the CSV from data.gov on bike share trips and make a static chart for my site.",
+      "expect": [
+        "generate-visualization"
+      ]
+    },
+    {
+      "id": "slide-deck",
+      "prompt": "Build a slide deck from these three charts for my talk on Thursday.",
+      "expect": [
+        "generate-slide-deck"
+      ]
+    },
+    {
+      "id": "speaker-notes",
+      "prompt": "Give me speaker notes and a talk track for the deck I finished.",
+      "expect": [
+        "presentation-coach"
+      ]
+    },
+    {
+      "id": "podcast",
+      "prompt": "Make this week's podcast episode from my tagged notes.",
+      "expect": [
+        "generate-podcast"
+      ]
+    },
+    {
+      "id": "explainer-video",
+      "prompt": "Turn my note on Bayes' rule into a short explainer video.",
+      "expect": [
+        "generate-explainer-video"
+      ]
+    },
+    {
+      "id": "vgc-meta",
+      "prompt": "What's trending in the VGC metagame after the last regional? Write it up for the site.",
+      "expect": [
+        "vgc-meta-research"
+      ]
+    },
+    {
+      "id": "vgc-trainer",
+      "prompt": "Build a VGC practice page with turn-by-turn Fake Out scenarios.",
+      "expect": [
+        "generate-vgc-trainer"
+      ]
+    },
+    {
+      "id": "math-source",
+      "prompt": "Find the original paper and exact page where the Atiyah-Singer index theorem is first stated.",
+      "expect": [
+        "math-source-hunter"
+      ]
+    },
+    {
+      "id": "skill-sharpening",
+      "prompt": "Run the daily skills maintenance pass on this collection.",
+      "expect": [
+        "skill-sharpening"
+      ]
+    },
+    {
+      "id": "automate-me",
+      "prompt": "Capture my working style into a personal -mode skill.",
+      "expect": [
+        "automate-me"
+      ]
+    },
+    {
+      "id": "setup-pstack",
+      "prompt": "Set up pstack models and budget for this host.",
+      "expect": [
+        "setup-pstack"
+      ]
+    },
+    {
+      "id": "none-arith",
+      "prompt": "What's 17 times 23?",
+      "expect": []
+    },
+    {
+      "id": "none-rename",
+      "prompt": "Rename the variable `tmp` to `retryCount` in utils.py.",
+      "expect": []
+    },
+    {
+      "id": "none-capital",
+      "prompt": "What's the capital of Portugal?",
+      "expect": []
+    }
+  ]
+}
