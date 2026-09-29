@@ -37,7 +37,7 @@ this skill decides what to do and in what order.
   data, TeX errors, overfull boxes, page-count agreement, byte-identical
   rebuild) and you have looked at the rendered slides and script.
 - Colours only through the theme's names (`yjForeground`, `yjAccent`,
-  `yjBlue`, `yjGreen`, `yjSecondary`, `yjBorder`), so the dark variant works
+  `yjWarm`, `yjGreen`, `yjSecondary`, `yjBorder`), so the dark variant works
   unchanged; check it as well as the light slides.
 - Do not push, publish, or edit visuals unless asked.
 
