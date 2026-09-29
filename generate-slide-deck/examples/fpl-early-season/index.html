@@ -247,6 +247,8 @@ const Deck=(()=>{
     const w=vv?vv.width:innerWidth, h=vv?vv.height:innerHeight;
     viewportEl.style.width=w+'px';
     viewportEl.style.height=h+'px';
+    viewportEl.style.left=(vv?vv.offsetLeft:0)+'px';
+    viewportEl.style.top=(vv?vv.offsetTop:0)+'px';
     return {w,h};
   }
   function fit(){
