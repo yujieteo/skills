@@ -1,0 +1,18 @@
+{
+ "slug": "template-trainer",
+ "source_url": "https://example.invalid/team",
+ "sources": [
+  "https://example.invalid/rules",
+  "https://example.invalid/team",
+  "https://example.invalid/moves"
+ ],
+ "fetched": "2026-01-01",
+ "key_file_used": false,
+ "assumptions": [
+  "TEMPLATE: team source and regulation gap, legality not officially confirmed.",
+  "TEMPLATE: practice four is the page's choice.",
+  "TEMPLATE: base forms, Mega not simulated.",
+  "TEMPLATE: opponents hypothetical, no damage simulated.",
+  "TEMPLATE: sources used and any not fetched."
+ ]
+}

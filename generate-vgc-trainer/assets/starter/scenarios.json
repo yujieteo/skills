@@ -1,0 +1,184 @@
+{
+ "scenarios": [
+  {
+   "id": "template-scenario",
+   "title": "TEMPLATE: one fundamental",
+   "short": "Template",
+   "rules": [
+    "fake-out"
+   ],
+   "lesson": "TEMPLATE: two sentences on the rule and its cost.",
+   "assumption": "TEMPLATE: state speed order from recorded base Speed and scope claims to a turn.",
+   "takeaway": "TEMPLATE: one sentence.",
+   "turns": [
+    {
+     "title": "Turn 1",
+     "prompt": "TEMPLATE: what decision is the player making?",
+     "field": "Turn 1. Every Pokemon is new on the field.",
+     "you": [
+      {
+       "name": "Mon A",
+       "tags": []
+      },
+      {
+       "name": "Mon B",
+       "tags": []
+      }
+     ],
+     "opp": [
+      {
+       "name": "Foe A",
+       "tags": []
+      },
+      {
+       "name": "Foe B",
+       "tags": []
+      }
+     ],
+     "bench": [],
+     "opp_plan": "Foe A: Wood Hit → Mon A. Foe B: Dark Hit → Mon B.",
+     "options": [
+      {
+       "id": "a",
+       "label": "Mon A: Heat Blast · Mon B: Fake Out → Foe A",
+       "verdict": "best",
+       "order": [
+        {
+         "who": "Mon B",
+         "side": "you",
+         "move": "Fake Out",
+         "target": "Foe A",
+         "result": "lands",
+         "note": "flinches Foe A"
+        },
+        {
+         "who": "Mon A",
+         "side": "you",
+         "move": "Heat Blast",
+         "target": "both foes",
+         "result": "lands",
+         "note": "hits both"
+        },
+        {
+         "who": "Foe B",
+         "side": "opp",
+         "move": "Dark Hit",
+         "target": "Mon B",
+         "result": "lands",
+         "note": "after Foe A is skipped"
+        }
+       ],
+       "happens": [
+        "TEMPLATE: mechanics in resolution order."
+       ],
+       "why": [
+        "TEMPLATE: the transferable principle."
+       ],
+       "checks": [
+        {
+         "move": "Fire",
+         "def": [
+          "Grass"
+         ],
+         "x": 2
+        }
+       ]
+      },
+      {
+       "id": "b",
+       "label": "Mon A: Protect · Mon B: Protect",
+       "verdict": "ok",
+       "order": [
+        {
+         "who": "Mon A",
+         "side": "you",
+         "move": "Protect",
+         "target": "self",
+         "result": "lands",
+         "note": "guards Mon A"
+        },
+        {
+         "who": "Mon B",
+         "side": "you",
+         "move": "Protect",
+         "target": "self",
+         "result": "lands",
+         "note": "guards Mon B"
+        },
+        {
+         "who": "Foe A",
+         "side": "opp",
+         "move": "Wood Hit",
+         "target": "Mon A",
+         "result": "blocked",
+         "note": "guarded"
+        },
+        {
+         "who": "Foe B",
+         "side": "opp",
+         "move": "Dark Hit",
+         "target": "Mon B",
+         "result": "blocked",
+         "note": "guarded"
+        }
+       ],
+       "happens": [
+        "TEMPLATE."
+       ],
+       "why": [
+        "TEMPLATE."
+       ],
+       "checks": []
+      },
+      {
+       "id": "c",
+       "label": "Mon A: Heat Blast · Mon B: Protect",
+       "verdict": "bad",
+       "order": [
+        {
+         "who": "Mon B",
+         "side": "you",
+         "move": "Protect",
+         "target": "self",
+         "result": "lands",
+         "note": "guards Mon B"
+        },
+        {
+         "who": "Mon A",
+         "side": "you",
+         "move": "Heat Blast",
+         "target": "both foes",
+         "result": "lands",
+         "note": "hits both"
+        },
+        {
+         "who": "Foe A",
+         "side": "opp",
+         "move": "Wood Hit",
+         "target": "Mon A",
+         "result": "lands",
+         "note": "hits Mon A"
+        },
+        {
+         "who": "Foe B",
+         "side": "opp",
+         "move": "Dark Hit",
+         "target": "Mon B",
+         "result": "blocked",
+         "note": "guarded"
+        }
+       ],
+       "happens": [
+        "TEMPLATE."
+       ],
+       "why": [
+        "TEMPLATE."
+       ],
+       "checks": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

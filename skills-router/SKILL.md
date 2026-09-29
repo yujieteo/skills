@@ -91,6 +91,7 @@ Pick the row that matches the task, load only that skill, and let it load its ow
 | Blog post in `data/blog/` | `write-metarational-blogpost` |
 | Verify math sources | `math-source-hunter` |
 | Pokemon VGC meta | `vgc-meta-research` |
+| Interactive VGC tactical-practice trainer | `generate-vgc-trainer` |
 
 ## Set up and maintain
 
