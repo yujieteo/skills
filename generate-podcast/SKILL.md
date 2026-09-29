@@ -97,6 +97,10 @@ The goal is comprehensible speech, not a faithful TeX render.
   `kokoro>=0.9.4`, `espeakng-loader==0.2.4`, `soundfile>=0.12`,
   `lameenc>=1.7`, and `numpy>=1.26`. The first synthesis downloads the Kokoro
   model.
+- Build the Kokoro pipeline in the voice's language: `KPipeline(lang_code=voice[0])`.
+  Voice ids start with it: `a` American (`af_heart`), `b` British (`bf_emma`,
+  `bf_isabella`, `bm_george`, `bm_lewis`). A British voice run through the
+  American pipeline (`lang_code="a"`) gets American pronunciation.
 - Keep the runtime optional: planning and metadata code must stay importable
   without Kokoro installed, and a missing runtime should raise a clear install
   hint rather than a bare import error.

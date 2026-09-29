@@ -22,6 +22,11 @@ from pathlib import Path
 
 SAMPLE_RATE = 24000
 DEFAULT_VOICE = "af_heart"
+# Kokoro voice ids start with their language: a = American English,
+# b = British English (bf_emma, bf_isabella, bm_george, bm_lewis, ...), then
+# e, f, h, i, j, p, z for other languages. The pipeline must use the same
+# code, or a British voice is read with American pronunciation.
+LANG_CODES = set("abefhijpz")
 LEAD_SECONDS = 0.5
 GAP_SECONDS = 0.7
 TAIL_SECONDS = 1.5
@@ -60,9 +65,18 @@ def srt_time(seconds):
     return f"{hours:02}:{minutes:02}:{secs:02},{millis:03}"
 
 
+def lang_code_for(voice):
+    """The Kokoro pipeline language for a voice id such as af_heart or bf_emma."""
+    if len(voice) < 4 or voice[0] not in LANG_CODES or voice[1] not in "fm" or voice[2] != "_":
+        sys.exit(f"Unrecognised Kokoro voice id {voice!r}: expected e.g. af_heart (American) "
+                 "or bf_emma (British).")
+    return voice[0]
+
+
 def synthesize(script, out, voice, speed):
+    lang_code = lang_code_for(voice)
     numpy, KPipeline = load_kokoro()
-    pipeline = KPipeline(lang_code="a")
+    pipeline = KPipeline(lang_code=lang_code)
     audio_dir = out / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
 
@@ -119,6 +133,7 @@ def synthesize(script, out, voice, speed):
     write_wav(out / "narration.wav", numpy.concatenate(parts), numpy)
     return {
         "voice": voice,
+        "lang_code": lang_code,
         "speed": speed,
         "sample_rate": SAMPLE_RATE,
         "total_seconds": round(total, 3),
