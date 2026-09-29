@@ -9,7 +9,7 @@ Each top-level directory is one skill, anchored by a `SKILL.md` with YAML frontm
 - `agents/` — host policy or subagent configuration for the skill.
 - `references/` — longer material the `SKILL.md` loads on demand.
 - `scripts/` — runnable helpers, when the skill ships any.
-- `assets/` and `examples/` — templates a skill copies from, and finished worked outputs that show what the skill produces, such as `generate-slide-deck/assets/deck-shell.html` and `generate-slide-deck/examples/fpl-early-season/`.
+- `assets/` and `examples/` — templates a skill copies from, and finished worked outputs that show what the skill produces, such as `generate-slide-deck/assets/deck-shell.html` and `generate-slide-deck/examples/fpl-early-season/`. `generate-vgc-trainer/assets/starter/` is a minimal valid dataset that the skill's `scripts/verify-trainer-data.py` checks.
 - Named documents the skill points to, such as `poteto-mode/playbooks/`, `domain-modeling/ADR-FORMAT.md`, and `wizard/template.sh`.
 
 `skills-router/` is the short entry point: one table that maps a task type to the single skill that fits, so an agent loads one skill instead of scanning all of them. Add a row there when you add a skill. Skills keep their bulky, situational material in `references/` or `playbooks/` and link to it, so the always-loaded `SKILL.md` stays small.

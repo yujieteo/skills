@@ -1,0 +1,221 @@
+{
+  "topic": "TEMPLATE: replace with the trainer topic",
+  "sources": [
+    {
+      "id": "rules",
+      "url": "https://example.invalid/rules",
+      "label": "TEMPLATE source rules",
+      "used_for": "template"
+    },
+    {
+      "id": "team",
+      "url": "https://example.invalid/team",
+      "label": "TEMPLATE source team",
+      "used_for": "template"
+    },
+    {
+      "id": "moves",
+      "url": "https://example.invalid/moves",
+      "label": "TEMPLATE source moves",
+      "used_for": "template"
+    }
+  ],
+  "regulation": {
+    "name": "TEMPLATE Regulation",
+    "official_window": "TEMPLATE dates",
+    "eligibility": "TEMPLATE",
+    "format": "Double Battle, register 6, bring 4",
+    "mega": "One Mega per battle",
+    "item_clause": "No duplicate items",
+    "legality_of_team_in_target": {
+      "species": {
+        "Mon A": true,
+        "Mon B": true
+      },
+      "items": {
+        "Item A": true,
+        "Item B": true
+      },
+      "source": "rules",
+      "note": "TEMPLATE: state who checked and what is Not verified"
+    },
+    "sources": [
+      "rules"
+    ]
+  },
+  "team": {
+    "player": "TEMPLATE",
+    "event": "TEMPLATE",
+    "placement": "TEMPLATE",
+    "record": "TEMPLATE",
+    "regulation_played": "TEMPLATE Regulation (not the target)",
+    "members": [
+      {
+        "species": "Mon A",
+        "item": "Item A",
+        "ability": "Ability A",
+        "nature": "Jolly",
+        "moves": [
+          "Protect",
+          "Heat Blast"
+        ],
+        "types": [
+          "Fire"
+        ],
+        "base_stats": {
+          "spe": 100
+        }
+      },
+      {
+        "species": "Mon B",
+        "item": "Item B",
+        "ability": "Ability B",
+        "nature": "Calm",
+        "moves": [
+          "Fake Out",
+          "Protect"
+        ],
+        "types": [
+          "Normal"
+        ],
+        "base_stats": {
+          "spe": 60
+        }
+      }
+    ],
+    "sources": [
+      "team"
+    ]
+  },
+  "practice_four": [
+    "Mon A",
+    "Mon B"
+  ],
+  "species": {
+    "Mon A": {
+      "types": [
+        "Fire"
+      ],
+      "abilities": [
+        "Ability A"
+      ],
+      "base_stats": {
+        "spe": 100
+      },
+      "source": "moves"
+    },
+    "Mon B": {
+      "types": [
+        "Normal"
+      ],
+      "abilities": [
+        "Ability B"
+      ],
+      "base_stats": {
+        "spe": 60
+      },
+      "source": "moves"
+    },
+    "Foe A": {
+      "types": [
+        "Grass"
+      ],
+      "abilities": [
+        "Ability C"
+      ],
+      "base_stats": {
+        "spe": 85
+      },
+      "source": "moves"
+    },
+    "Foe B": {
+      "types": [
+        "Dark"
+      ],
+      "abilities": [
+        "Ability D"
+      ],
+      "base_stats": {
+        "spe": 50
+      },
+      "source": "moves"
+    }
+  },
+  "moves": {
+    "Protect": {
+      "type": "Normal",
+      "category": "Status",
+      "power": 0,
+      "accuracy": null,
+      "priority": 4,
+      "pp_showdown": 10,
+      "target": "self",
+      "effect": "Blocks most moves aimed at the user; 1/3 chain.",
+      "source": "moves",
+      "pp_champions": 10
+    },
+    "Fake Out": {
+      "type": "Normal",
+      "category": "Physical",
+      "power": 40,
+      "accuracy": 100,
+      "priority": 3,
+      "pp_showdown": 10,
+      "target": "normal",
+      "effect": "First turn on the field only; flinch.",
+      "source": "moves",
+      "pp_champions": 10
+    },
+    "Heat Blast": {
+      "type": "Fire",
+      "category": "Special",
+      "power": 95,
+      "accuracy": 90,
+      "priority": 0,
+      "pp_showdown": 10,
+      "target": "allAdjacentFoes",
+      "effect": "TEMPLATE spread move.",
+      "source": "moves",
+      "pp_champions": 10
+    },
+    "Wood Hit": {
+      "type": "Grass",
+      "category": "Physical",
+      "power": 100,
+      "accuracy": 100,
+      "priority": 0,
+      "pp_showdown": 10,
+      "target": "normal",
+      "effect": "TEMPLATE.",
+      "source": "moves",
+      "pp_champions": 10
+    },
+    "Dark Hit": {
+      "type": "Dark",
+      "category": "Physical",
+      "power": 85,
+      "accuracy": null,
+      "priority": 0,
+      "pp_showdown": 10,
+      "target": "normal",
+      "effect": "TEMPLATE.",
+      "source": "moves",
+      "pp_champions": 10
+    }
+  },
+  "protect_chain": [
+    1,
+    0.3333,
+    0.1111
+  ],
+  "type_chart": {
+    "Fire": {
+      "Grass": 2,
+      "Dark": 1
+    },
+    "Normal": {
+      "Ghost": 0
+    }
+  },
+  "type_chart_note": "TEMPLATE: copy from the Showdown typechart."
+}

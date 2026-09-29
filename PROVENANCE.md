@@ -38,6 +38,7 @@ The following skills were developed separately in this local collection:
 - `generate-podcast`
 - `generate-slide-deck`
 - `generate-visualization`
+- `generate-vgc-trainer`
 - `grilling`
 - `internalise-computation`
 - `math-source-hunter`
