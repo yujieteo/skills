@@ -1,0 +1,14 @@
+{
+  "skill": "to-questionnaire",
+  "cases": [
+    {
+      "id": "questionnaire-asks-send",
+      "prompt": "I can't decide whether to shard our Postgres. Make a questionnaire for someone else to fill in.",
+      "assertions": [
+        "Before writing the document, the reply asks who the questionnaire is going to (their role or expertise).",
+        "The reply asks what decisions or facts the user needs back.",
+        "The reply does not interview the user about Postgres sharding itself."
+      ]
+    }
+  ]
+}

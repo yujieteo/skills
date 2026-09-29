@@ -8,7 +8,15 @@ This is a personal collection that a daily automation also edits (see `skill-sha
 node skill-sharpening/scripts/verify-collection.mjs
 ```
 
-The same check runs in CI. If you touched `poteto-mode/scripts/`, also run `poteto-mode/scripts/setup.sh --check` (needs Bun).
+The same check runs in CI. If you changed a skill's description or instructions, also run its evals (they call the Anthropic API):
+
+```sh
+cd skill-sharpening/evals && npm ci
+node run.mjs triggers
+node run.mjs behavior --skill <name> --baseline
+```
+
+If you touched `poteto-mode/scripts/`, also run `poteto-mode/scripts/setup.sh --check` (needs Bun).
 
 ## Rules
 
@@ -18,4 +26,4 @@ The same check runs in CI. If you touched `poteto-mode/scripts/`, also run `pote
 - Adapted material needs an entry in [`PROVENANCE.md`](PROVENANCE.md).
 - Never commit credentials, hostnames, private paths, or personal data.
 
-More detail is in [`skills-router/references/working-in-this-repo.md`](skills-router/references/working-in-this-repo.md).
+[Linting and evals](skill-sharpening/references/linting-and-evals.md) explains every lint rule and how to add eval cases. More detail is in [`skills-router/references/working-in-this-repo.md`](skills-router/references/working-in-this-repo.md).

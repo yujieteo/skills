@@ -1,0 +1,25 @@
+{
+  "skill": "bro",
+  "cases": [
+    {
+      "id": "bro-restate-jargon",
+      "history": [
+        {
+          "role": "user",
+          "content": "Why is the build slow?"
+        },
+        {
+          "role": "assistant",
+          "content": "The bottleneck is a non-idempotent codegen step on the critical path; its cache key is derived from a non-hermetic input vector (mtime), so every invocation invalidates the downstream DAG and forces a cold rebuild of the transitive closure."
+        }
+      ],
+      "prompt": "bro",
+      "assertions": [
+        "The reply restates the earlier explanation rather than answering a new question.",
+        "The reply explains that a code generation step reruns every time because it depends on file modification times.",
+        "The reply avoids the jargon terms 'idempotent', 'hermetic', 'DAG', and 'transitive closure'.",
+        "The reply is shorter than the original assistant message."
+      ]
+    }
+  ]
+}

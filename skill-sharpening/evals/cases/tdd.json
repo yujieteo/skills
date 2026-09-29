@@ -1,0 +1,24 @@
+{
+  "skill": "tdd",
+  "cases": [
+    {
+      "id": "tdd-cheap-bug",
+      "prompt": "Bug: `slugify(\"Hello  World\")` returns `hello--world` but should return `hello-world`. It lives in src/slug.ts and there's an existing tests/slug.test.ts using vitest. Fix it.",
+      "assertions": [
+        "The reply adds a test case for 'Hello  World' (two spaces) before or alongside the fix, placed in tests/slug.test.ts.",
+        "The reply says the new test should be run and seen to fail before the production code changes.",
+        "The reply changes slugify so repeated whitespace or hyphens collapse to a single hyphen.",
+        "The reply says the test should pass after the fix."
+      ]
+    },
+    {
+      "id": "tdd-skip-expensive",
+      "prompt": "The nightly Kubernetes blue/green deploy sometimes leaves both colors live for ~30s. It only happens in prod under real traffic. Should we write a failing test first before touching the rollout script?",
+      "assertions": [
+        "The reply does not insist on writing a new failing automated test before fixing.",
+        "The reply explains that a test here would be expensive, integration-heavy, or depend on production-only state.",
+        "The reply proposes a closer practical check instead, such as a targeted script, log assertion, or reproduction in staging."
+      ]
+    }
+  ]
+}

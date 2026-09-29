@@ -15,11 +15,15 @@ Load this only when you are changing the collection itself.
 - Description is at most 60 words. State the trigger, not the method.
 - `SKILL.md` is at most 2000 words.
 - Every relative link in `SKILL.md` resolves.
+- Every skill has a router row, and `agents/openai.yaml` uses known keys.
+
+The full rule list is in [linting-and-evals.md](../../skill-sharpening/references/linting-and-evals.md).
 
 ## Validate
 
 ```sh
 node skill-sharpening/scripts/verify-collection.mjs
+node skill-sharpening/evals/run.mjs check                 # eval files are well formed
 node skill-sharpening/scripts/normalize-frontmatter.mjs   # rewrites in place; review the diff
 poteto-mode/scripts/setup.sh --check                      # only when you touched poteto-mode/scripts
 ```
@@ -29,4 +33,5 @@ poteto-mode/scripts/setup.sh --check                      # only when you touche
 1. Create `<name>/SKILL.md` with the frontmatter above. Follow `writing-for-agents`.
 2. Add one row to the matching table in [../SKILL.md](../SKILL.md).
 3. Record lineage in `PROVENANCE.md` if the skill is adapted from upstream.
-4. Run the validator.
+4. Add a trigger case to `skill-sharpening/evals/triggers.json`, and behavior cases in `skill-sharpening/evals/cases/<name>.json` if the skill's effect shows in one reply.
+5. Run the validator.

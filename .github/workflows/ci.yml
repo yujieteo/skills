@@ -23,6 +23,8 @@ jobs:
           node-version: 22
       - name: Validate collection structure
         run: node skill-sharpening/scripts/verify-collection.mjs
+      - name: Validate eval files
+        run: node skill-sharpening/evals/run.mjs check
 
   poteto-tools:
     name: Test Poteto Mode tools

@@ -1,0 +1,26 @@
+{
+  "skill": "unslop",
+  "cases": [
+    {
+      "id": "unslop-release-note",
+      "prompt": "Clean up this release note paragraph:\n\nAdditionally, our new caching layer serves as a pivotal cornerstone of the platform — showcasing our commitment to performance. It is important to note that response times have been significantly enhanced, fostering a vibrant developer experience. I hope this helps!",
+      "assertions": [
+        "The rewrite contains no em dash (—).",
+        "The rewrite drops the words 'Additionally', 'pivotal', 'showcasing', 'fostering', and 'vibrant'.",
+        "The rewrite replaces 'serves as' with a plain verb such as 'is'.",
+        "The rewrite does not end with a chatbot phrase such as 'I hope this helps!'.",
+        "The rewrite keeps the factual claim that a caching layer improved response times."
+      ]
+    },
+    {
+      "id": "unslop-headings",
+      "prompt": "Fix this doc heading and bullet list:\n\n## 🚀 Getting Started With The CLI\n- **Installation:** Installation is done via npm.\n- **Configuration:** Configuration is handled in a config file.",
+      "assertions": [
+        "The heading is in sentence case (for example 'Getting started with the CLI').",
+        "The heading has no emoji.",
+        "The bold 'Label:' lead-ins that restate the line are removed or turned into plain prose.",
+        "At least one passive construction ('is done', 'is handled') becomes active voice."
+      ]
+    }
+  ]
+}

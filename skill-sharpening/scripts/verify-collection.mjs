@@ -1,72 +1,196 @@
 #!/usr/bin/env node
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, join, normalize, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+// Lint the skills collection. Errors fail the run; warnings print but pass
+// unless --strict is given. See ../references/linting-and-evals.md.
 
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { basename, dirname, join, normalize, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { loadSkills, wordCount } from "./lib/skills.mjs";
+
+const args = process.argv.slice(2);
+const strict = args.includes("--strict");
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const repository = resolve(process.argv[2] ?? dirname(dirname(scriptDirectory)));
-const allowedKeys = new Set(["name", "description", "allowed-tools", "license", "metadata"]);
-const problems = [];
+const repository = resolve(args.find((arg) => !arg.startsWith("--")) ?? dirname(dirname(scriptDirectory)));
+
+const ALLOWED_KEYS = new Set(["name", "description", "allowed-tools", "license", "metadata"]);
 const DESCRIPTION_WORD_LIMIT = 60;
+const DESCRIPTION_CHAR_LIMIT = 1024;
 const ENTRYPOINT_WORD_LIMIT = 2000;
+const NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const TRIGGER_PATTERN = /\b(use|apply|run|invoke)\b[^.]*\b(when|for|to|before|after|during|only|on|whenever)\b|\bmust always apply\b/i;
+const OPENAI_YAML_KEYS = { policy: ["allow_implicit_invocation"], interface: ["display_name", "short_description", "default_prompt"] };
+const SKIPPED_DIRECTORIES = new Set([".git", ".system", "node_modules", ".firecrawl", "dist", "build"]);
+
+const findings = [];
+const report = (severity, rule, file, message) => findings.push({ severity, rule, file: relative(repository, file), message });
+const error = (...rest) => report("error", ...rest);
+const warn = (...rest) => report("warning", ...rest);
 
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    if ([".git", ".system", "node_modules", ".firecrawl", "dist", "build"].includes(entry.name)) return [];
+    if (SKIPPED_DIRECTORIES.has(entry.name)) return [];
     const target = join(directory, entry.name);
     return entry.isDirectory() ? walk(target) : [target];
   });
 }
 
-for (const skillPath of walk(repository).filter((file) => basename(file) === "SKILL.md")) {
-  const content = readFileSync(skillPath, "utf8");
-  const frontmatter = content.match(/^---\n([\s\S]*?)\n---\n/);
-  if (!frontmatter) {
-    problems.push(`${skillPath}: missing YAML frontmatter`);
-    continue;
-  }
+function localLinks(markdown) {
+  const withoutCode = markdown.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
+  return [...withoutCode.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)]
+    .map(([, target]) => target)
+    .filter((target) => !/^([a-z][a-z0-9+.-]*:|#)|^(link|url)$/i.test(target));
+}
 
-  const fields = Object.fromEntries(
-    frontmatter[1]
-      .split("\n")
-      .filter((line) => /^[A-Za-z][A-Za-z0-9_-]*:/.test(line))
-      .map((line) => {
-        const separator = line.indexOf(":");
-        return [line.slice(0, separator), line.slice(separator + 1).trim().replace(/^['\"]|['\"]$/g, "")];
-      }),
-  );
+const skills = loadSkills(repository);
+const skillNames = new Set(skills.map((skill) => skill.dirName));
+
+// Layout: every top-level directory is a skill, and no skill is nested.
+for (const entry of readdirSync(repository, { withFileTypes: true })) {
+  if (entry.isDirectory() && !entry.name.startsWith(".") && !skillNames.has(entry.name)) {
+    error("layout/not-a-skill", join(repository, entry.name), "top-level directory has no SKILL.md");
+  }
+}
+for (const file of walk(repository).filter((path) => basename(path) === "SKILL.md")) {
+  if (dirname(dirname(file)) !== repository) error("layout/nested-skill", file, "SKILL.md must sit directly in a top-level directory");
+}
+
+// Frontmatter and entry point.
+const descriptions = new Map();
+for (const skill of skills) {
+  const { path, fields, body, errors, dirName } = skill;
+  for (const message of errors) error("frontmatter/parse", path, message);
+  if (!fields) continue;
 
   for (const key of Object.keys(fields)) {
-    if (!allowedKeys.has(key)) problems.push(`${skillPath}: unsupported frontmatter key ${key}`);
+    if (!ALLOWED_KEYS.has(key)) error("frontmatter/unknown-key", path, `unsupported frontmatter key ${key}`);
   }
-  if (!fields.name || !fields.description) problems.push(`${skillPath}: name and description are required`);
-  const descriptionWords = (fields.description ?? "").split(/\s+/).filter(Boolean).length;
-  if (descriptionWords > DESCRIPTION_WORD_LIMIT) {
-    problems.push(`${skillPath}: description has ${descriptionWords} words; limit is ${DESCRIPTION_WORD_LIMIT}`);
+  if (!fields.name || !fields.description) {
+    error("frontmatter/required", path, "name and description are required");
+    continue;
   }
-  const entrypointWords = content.split(/\s+/).filter(Boolean).length;
-  if (entrypointWords > ENTRYPOINT_WORD_LIMIT) {
-    problems.push(`${skillPath}: entrypoint has ${entrypointWords} words; limit is ${ENTRYPOINT_WORD_LIMIT}; use progressive disclosure`);
+  if (!NAME_PATTERN.test(fields.name) || fields.name.length > 64) {
+    error("name/format", path, `name ${fields.name} must be lowercase-kebab-case and at most 64 characters`);
   }
-  if (fields.name && fields.name !== basename(dirname(skillPath))) {
-    problems.push(`${skillPath}: name ${fields.name} does not match its directory`);
-  }
+  if (fields.name !== dirName) error("name/matches-directory", path, `name ${fields.name} does not match directory ${dirName}`);
 
-  for (const [, target] of content.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
-    if (/^(https?:|#|mailto:)|^link$/.test(target)) continue;
-    const localTarget = normalize(join(dirname(skillPath), target.split("#")[0]));
-    if (!existsSync(localTarget)) {
-      problems.push(`${skillPath}: unresolved local link ${target}`);
+  const description = fields.description;
+  const descriptionWords = wordCount(description);
+  if (descriptionWords > DESCRIPTION_WORD_LIMIT) {
+    error("description/word-limit", path, `description has ${descriptionWords} words; limit is ${DESCRIPTION_WORD_LIMIT}`);
+  }
+  if (description.length > DESCRIPTION_CHAR_LIMIT) {
+    error("description/char-limit", path, `description has ${description.length} characters; limit is ${DESCRIPTION_CHAR_LIMIT}`);
+  }
+  if (/<\/?[A-Za-z][^>]*>/.test(description)) error("description/no-tags", path, "description must not contain XML or HTML tags");
+  if (!TRIGGER_PATTERN.test(description)) {
+    warn("description/trigger", path, "description never says when to use the skill (for example \"Use when ...\")");
+  }
+  const key = description.trim().toLowerCase();
+  if (descriptions.has(key)) error("description/duplicate", path, `same description as ${descriptions.get(key)}`);
+  else descriptions.set(key, dirName);
+
+  const entrypointWords = wordCount(skill.content);
+  if (entrypointWords > ENTRYPOINT_WORD_LIMIT) {
+    error("entrypoint/word-limit", path, `entrypoint has ${entrypointWords} words; limit is ${ENTRYPOINT_WORD_LIMIT}; use progressive disclosure`);
+  }
+  if (wordCount(body) < 20 && !/Skill tool/.test(body)) warn("entrypoint/empty-body", path, "SKILL.md body has fewer than 20 words");
+
+  // Backticked paths such as `references/foo.md` that the skill tells an agent to open.
+  const mentioned = new Set(body.match(/`((?:references|playbooks|assets|examples)\/[^`\s*<>{}]+)`/g) ?? []);
+  for (const quoted of mentioned) {
+    const target = quoted.slice(1, -1);
+    if (!existsSync(join(skill.directory, target)) && !existsSync(join(repository, target))) {
+      warn("paths/missing", path, `mentions ${target}, which does not exist`);
     }
   }
 }
 
-if (problems.length) {
-  console.error(problems.join("\n"));
-  process.exit(1);
+// Relative links in every Markdown file of every skill, plus the root docs.
+const markdownFiles = walk(repository).filter((file) => file.endsWith(".md"));
+for (const file of markdownFiles) {
+  for (const target of localLinks(readFileSync(file, "utf8"))) {
+    const decoded = decodeURIComponent(target.split("#")[0]);
+    if (!decoded) continue;
+    if (!existsSync(normalize(join(dirname(file), decoded)))) {
+      const severity = basename(file) === "SKILL.md" ? error : warn;
+      severity("links/unresolved", file, `unresolved local link ${target}`);
+    }
+  }
 }
 
-console.log(`status: valid`);
-console.log(`skills: ${walk(repository).filter((file) => basename(file) === "SKILL.md").length}`);
+// agents/openai.yaml: only keys the host understands, with valid values.
+for (const skill of skills) {
+  const yamlPath = join(skill.directory, "agents", "openai.yaml");
+  if (!existsSync(yamlPath)) continue;
+  let section = null;
+  for (const [index, line] of readFileSync(yamlPath, "utf8").split(/\r?\n/).entries()) {
+    if (!line.trim() || line.trimStart().startsWith("#")) continue;
+    const top = line.match(/^([A-Za-z_]+):\s*$/);
+    const child = line.match(/^ {2}([A-Za-z_]+):\s*(.*)$/);
+    if (top) {
+      section = top[1];
+      if (!(section in OPENAI_YAML_KEYS)) error("agents/unknown-key", yamlPath, `unknown top-level key ${section}`);
+    } else if (child && section) {
+      const [, key, value] = child;
+      if (OPENAI_YAML_KEYS[section] && !OPENAI_YAML_KEYS[section].includes(key)) {
+        error("agents/unknown-key", yamlPath, `unknown key ${section}.${key}`);
+      }
+      if (key === "allow_implicit_invocation" && !/^(true|false)$/.test(value)) {
+        error("agents/invalid-value", yamlPath, "allow_implicit_invocation must be true or false");
+      }
+      if (key !== "allow_implicit_invocation" && !value) error("agents/invalid-value", yamlPath, `${section}.${key} is empty`);
+    } else {
+      error("agents/parse", yamlPath, `cannot parse line ${index + 1}: ${line}`);
+    }
+  }
+}
+
+// Router: every skill is reachable, and the router names no missing skill.
+const routerPath = join(repository, "skills-router", "SKILL.md");
+if (existsSync(routerPath)) {
+  const router = readFileSync(routerPath, "utf8");
+  const principlesPath = join(repository, "poteto-mode", "references", "principles.md");
+  const principles = existsSync(principlesPath) ? readFileSync(principlesPath, "utf8") : "";
+  const routed = new Set([...router.matchAll(/^\|.*\|\s*$/gm)].flatMap(([row]) => [...row.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1])));
+  for (const name of routed) {
+    if (!skillNames.has(name)) error("router/unknown-skill", routerPath, `routes to ${name}, which is not a skill`);
+  }
+  for (const name of skillNames) {
+    if (name === "skills-router" || routed.has(name)) continue;
+    if (name.startsWith("principle-") && principles.includes(name)) continue;
+    error("router/missing-skill", join(repository, name, "SKILL.md"), "skill has no row in skills-router/SKILL.md");
+  }
+}
+
+// Provenance: every skill's lineage is recorded.
+const provenancePath = join(repository, "PROVENANCE.md");
+if (existsSync(provenancePath)) {
+  const provenance = readFileSync(provenancePath, "utf8");
+  const listed = new Set([...provenance.matchAll(/`([a-z0-9-]+\*?)`/g)].map((m) => m[1]));
+  const wildcards = [...listed].filter((name) => name.endsWith("*")).map((name) => name.slice(0, -1));
+  for (const name of skillNames) {
+    if (listed.has(name) || wildcards.some((prefix) => name.startsWith(prefix))) continue;
+    warn("provenance/missing", join(repository, name, "SKILL.md"), "skill is not listed in PROVENANCE.md");
+  }
+}
+
+// Scripts that ship with a skill should be runnable.
+for (const file of walk(repository).filter((path) => /\/scripts\/[^/]+\.(sh|py)$/.test(path) && !path.includes(".template."))) {
+  const executable = (statSync(file).mode & 0o111) !== 0;
+  if (!executable) warn("scripts/not-executable", file, "script is not executable (chmod +x)");
+}
+
+const errors = findings.filter((finding) => finding.severity === "error");
+const warnings = findings.filter((finding) => finding.severity === "warning");
+for (const finding of [...errors, ...warnings]) {
+  const stream = finding.severity === "error" ? console.error : console.warn;
+  stream(`${finding.severity}: ${finding.file}: ${finding.message} [${finding.rule}]`);
+}
+
+const failed = errors.length > 0 || (strict && warnings.length > 0);
+console.log(`status: ${failed ? "invalid" : "valid"}`);
+console.log(`skills: ${skills.length}`);
+console.log(`errors: ${errors.length} warnings: ${warnings.length}${strict ? " (strict)" : ""}`);
 console.log(`limits: description<=${DESCRIPTION_WORD_LIMIT} entrypoint<=${ENTRYPOINT_WORD_LIMIT}`);
+process.exit(failed ? 1 : 0);

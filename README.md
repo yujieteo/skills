@@ -14,7 +14,7 @@ Each top-level directory is one skill, anchored by a `SKILL.md` with YAML frontm
 
 `skills-router/` is the short entry point: one table that maps a task type to the single skill that fits, so an agent loads one skill instead of scanning all of them. Add a row there when you add a skill. Skills keep their bulky, situational material in `references/` or `playbooks/` and link to it, so the always-loaded `SKILL.md` stays small.
 
-`poteto-mode/` is the largest subtree, with its own scripts, references, and playbooks. `skill-sharpening/` holds the collection validator and frontmatter normalizer used by the daily automation.
+`poteto-mode/` is the largest subtree, with its own scripts, references, and playbooks. `skill-sharpening/` holds the collection linter, frontmatter normalizer, and evals used by the daily automation.
 
 Repository-level files sit at the root: `README.md`, [`CONTRIBUTING.md`](CONTRIBUTING.md), `LICENSE`, the two provenance records, and `.github/` for CI and the pull request template. Skill directories stay flat at the top level because the repository is installed as `~/.codex/skills`.
 
@@ -69,7 +69,9 @@ Run the collection validator before committing:
 node skill-sharpening/scripts/verify-collection.mjs
 ```
 
-It checks YAML frontmatter, that each `name` matches its directory, description and entrypoint length limits, and unresolved local links across every `SKILL.md`. It reads only; it changes nothing.
+It lints the collection: frontmatter, names, description and entrypoint limits, local links, `agents/openai.yaml`, router and provenance coverage. Errors fail the run; warnings print. It reads only; it changes nothing.
+
+Evals check that skills work when a model uses them: that a request loads the right skill, and that a loaded skill changes the reply as intended. They call the Anthropic API, so they cost money and run by hand. [Linting and evals](skill-sharpening/references/linting-and-evals.md) explains both, every lint rule, and how to add eval cases.
 
 To exercise the Poteto Mode helpers without changing the toolchain:
 
@@ -86,4 +88,4 @@ bun test orch watch-pr
 bun run typecheck
 ```
 
-The [CI workflow](.github/workflows/ci.yml) runs the collection validator and the Poteto Mode tests and type checker on every push to `main` and every pull request.
+The [CI workflow](.github/workflows/ci.yml) runs the collection linter, the eval file check, and the Poteto Mode tests and type checker on every push to `main` and every pull request. The [Evals workflow](.github/workflows/evals.yml) runs the paid evals when started by hand.

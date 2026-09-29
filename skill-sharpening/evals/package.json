@@ -1,0 +1,14 @@
+{
+  "name": "skills-evals",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node run.mjs check",
+    "triggers": "node run.mjs triggers",
+    "behavior": "node run.mjs behavior"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "zod": "^4.6.5"
+  }
+}
