@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anscombe's quartet — same stats, four shapes</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --line: #767676;
+    --hairline: #e0e0e0;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    background: #fff;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 16px 16px 40px; }
+  h1 { font-size: 1.5rem; line-height: 1.2; margin: 0 0 8px; }
+  .story { margin: 0 0 4px; max-width: 42em; }
+  .stats { color: var(--muted); margin: 0 0 20px; max-width: 42em; }
+
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .figure {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 12px;
+  }
+  .plot {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: #fff;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 0;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .plot-caption { display: block; padding: 12px; }
+  .plot[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .plot svg { width: 100%; height: auto; display: block; }
+  .plot-name { font-weight: 700; font-size: 1.125rem; }
+  .plot-note { display: block; color: var(--muted); }
+
+  .axis { stroke: #c8c8c8; stroke-width: 1; }
+  .tick { font-size: 12px; fill: var(--muted); font-family: inherit; }
+  .fit { stroke: var(--line); stroke-width: 1; }
+  .fit-label { font-size: 12px; fill: var(--muted); font-style: italic; font-family: inherit; }
+  .point { fill: var(--accent); }
+  .point-label { font-size: 12px; fill: var(--text); font-family: inherit; }
+
+  .caption { color: var(--muted); margin: 8px 0 20px; max-width: 42em; }
+
+  .detail-box { border: 1px solid var(--hairline); border-radius: 8px; padding: 16px; }
+  .detail-box h2 { margin: 0 0 8px; font-size: 1.125rem; }
+  .what { margin: 0 0 12px; }
+  .values { list-style: none; margin: 0 0 12px; padding: 0; columns: 2; column-gap: 24px; }
+  .values li { padding: 6px 0; break-inside: avoid; }
+  .hint { color: var(--muted); margin: 0; }
+  .reset {
+    margin-top: 12px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 16px;
+    font: inherit;
+    background: #fff;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .data-section { margin-top: 24px; }
+  .data-section h2 { font-size: 1.125rem; }
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 460px; }
+  caption { text-align: left; color: var(--muted); caption-side: top; padding: 8px 0; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--hairline); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  .fade { animation: fade-in 0.15s ease-out; }
+  @keyframes fade-in { from { opacity: 0.4; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Anscombe's quartet</h1>
+    <p class="story">All four sets share the same mean, variance, and correlation,
+    and the same fitted line <em>y = 3 + 0.5x</em> — yet the points show four very
+    different shapes. Summary statistics alone can hide everything that matters.</p>
+    <p class="stats">mean x = 9.0 · mean y = 7.5 · variance x = 11 · variance y = 4.12 · correlation ≈ 0.82</p>
+  </header>
+
+  <section class="figure" aria-label="Four small-multiple scatter plots, one per set">
+    <button class="plot" aria-pressed="false" aria-label="Set I, nearly linear">
+      <svg viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+        <line x1="30" y1="170" x2="300" y2="170" class="axis"/>
+        <line x1="30" y1="170" x2="30" y2="15" class="axis"/>
+        <text x="30" y="186" class="tick" text-anchor="middle">4</text>
+        <text x="300" y="186" class="tick" text-anchor="end">19</text>
+        <text x="24" y="174" class="tick" text-anchor="end">3</text>
+        <text x="24" y="19" class="tick" text-anchor="end">13</text>
+        <line x1="30" y1="139" x2="300" y2="23" class="fit"/>
+        <text x="214" y="34" class="fit-label" text-anchor="start">y = 3 + 0.5x</text>
+        <circle cx="138" cy="92" r="4" class="point"/>
+        <circle cx="102" cy="109" r="4" class="point"/>
+        <circle cx="192" cy="99" r="4" class="point"/>
+        <circle cx="120" cy="80" r="4" class="point"/>
+        <circle cx="156" cy="87" r="4" class="point"/>
+        <circle cx="210" cy="62" r="4" class="point"/>
+        <circle cx="66" cy="104" r="4" class="point"/>
+        <circle cx="30" cy="150" r="4" class="point"/>
+        <circle cx="174" cy="48" r="4" class="point"/>
+        <circle cx="84" cy="142" r="4" class="point"/>
+        <circle cx="48" cy="128" r="4" class="point"/>
+      </svg>
+      <span class="plot-caption">
+        <span class="plot-name">I</span>
+        <span class="plot-note">nearly linear</span>
+      </span>
+    </button>
+
+    <button class="plot" aria-pressed="false" aria-label="Set II, curved, not linear">
+      <svg viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+        <line x1="30" y1="170" x2="300" y2="170" class="axis"/>
+        <line x1="30" y1="170" x2="30" y2="15" class="axis"/>
+        <text x="30" y="186" class="tick" text-anchor="middle">4</text>
+        <text x="300" y="186" class="tick" text-anchor="end">19</text>
+        <text x="24" y="174" class="tick" text-anchor="end">3</text>
+        <text x="24" y="19" class="tick" text-anchor="end">13</text>
+        <line x1="30" y1="139" x2="300" y2="23" class="fit"/>
+        <circle cx="138" cy="75" r="4" class="point"/>
+        <circle cx="102" cy="90" r="4" class="point"/>
+        <circle cx="192" cy="81" r="4" class="point"/>
+        <circle cx="120" cy="81" r="4" class="point"/>
+        <circle cx="156" cy="73" r="4" class="point"/>
+        <circle cx="210" cy="91" r="4" class="point"/>
+        <circle cx="66" cy="121" r="4" class="point"/>
+        <circle cx="30" cy="168" r="4" class="point"/>
+        <circle cx="174" cy="75" r="4" class="point"/>
+        <circle cx="84" cy="104" r="4" class="point"/>
+        <circle cx="48" cy="143" r="4" class="point"/>
+      </svg>
+      <span class="plot-caption">
+        <span class="plot-name">II</span>
+        <span class="plot-note">curved, not linear</span>
+      </span>
+    </button>
+
+    <button class="plot" aria-pressed="false" aria-label="Set III, nearly a line with one outlier">
+      <svg viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+        <line x1="30" y1="170" x2="300" y2="170" class="axis"/>
+        <line x1="30" y1="170" x2="30" y2="15" class="axis"/>
+        <text x="30" y="186" class="tick" text-anchor="middle">4</text>
+        <text x="300" y="186" class="tick" text-anchor="end">19</text>
+        <text x="24" y="174" class="tick" text-anchor="end">3</text>
+        <text x="24" y="19" class="tick" text-anchor="end">13</text>
+        <line x1="30" y1="139" x2="300" y2="23" class="fit"/>
+        <text x="196" y="24" class="point-label" text-anchor="start">outlier</text>
+        <circle cx="138" cy="101" r="4" class="point"/>
+        <circle cx="102" cy="112" r="4" class="point"/>
+        <circle cx="192" cy="19" r="4" class="point"/>
+        <circle cx="120" cy="106" r="4" class="point"/>
+        <circle cx="156" cy="95" r="4" class="point"/>
+        <circle cx="210" cy="79" r="4" class="point"/>
+        <circle cx="66" cy="122" r="4" class="point"/>
+        <circle cx="30" cy="133" r="4" class="point"/>
+        <circle cx="174" cy="90" r="4" class="point"/>
+        <circle cx="84" cy="117" r="4" class="point"/>
+        <circle cx="48" cy="128" r="4" class="point"/>
+      </svg>
+      <span class="plot-caption">
+        <span class="plot-name">III</span>
+        <span class="plot-note">nearly a line, one outlier</span>
+      </span>
+    </button>
+
+    <button class="plot" aria-pressed="false" aria-label="Set IV, one x-outlier makes the line">
+      <svg viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+        <line x1="30" y1="170" x2="300" y2="170" class="axis"/>
+        <line x1="30" y1="170" x2="30" y2="15" class="axis"/>
+        <text x="30" y="186" class="tick" text-anchor="middle">4</text>
+        <text x="300" y="186" class="tick" text-anchor="end">19</text>
+        <text x="24" y="174" class="tick" text-anchor="end">3</text>
+        <text x="24" y="19" class="tick" text-anchor="end">13</text>
+        <line x1="30" y1="139" x2="300" y2="23" class="fit"/>
+        <text x="294" y="30" class="point-label" text-anchor="end">x-outlier</text>
+        <circle cx="102" cy="115" r="4" class="point"/>
+        <circle cx="102" cy="127" r="4" class="point"/>
+        <circle cx="102" cy="97" r="4" class="point"/>
+        <circle cx="102" cy="79" r="4" class="point"/>
+        <circle cx="102" cy="85" r="4" class="point"/>
+        <circle cx="102" cy="107" r="4" class="point"/>
+        <circle cx="102" cy="135" r="4" class="point"/>
+        <circle cx="300" cy="23" r="4" class="point"/>
+        <circle cx="102" cy="130" r="4" class="point"/>
+        <circle cx="102" cy="94" r="4" class="point"/>
+        <circle cx="102" cy="110" r="4" class="point"/>
+      </svg>
+      <span class="plot-caption">
+        <span class="plot-name">IV</span>
+        <span class="plot-note">one x-outlier makes the line</span>
+      </span>
+    </button>
+  </section>
+
+  <p class="caption">The thin gray line in each plot is the shared fit <em>y = 3 + 0.5x</em>.
+  The four plots use identical scales so the shapes can be compared directly.</p>
+
+  <section aria-label="Detail">
+    <div class="detail-box" id="detail" aria-live="polite">
+      <h2>Four sets, one set of statistics</h2>
+      <p class="what">Activate a set — tap, click, or Tab to it and press Enter or Space —
+      to read its values and what to notice about its shape. Focusing a set also previews it.</p>
+      <p class="hint">Press "Show all" or Esc to return to this overview.</p>
+    </div>
+    <button class="reset" id="reset">Show all</button>
+  </section>
+
+  <section class="data-section" aria-label="Data">
+    <h2>Data</h2>
+    <div class="table-scroll" role="region" aria-label="Full dataset, scrolls horizontally" tabindex="0">
+      <table id="data-table">
+        <caption>Full values. Sets I–III share the x column; set IV has its own x.</caption>
+        <thead>
+          <tr>
+            <th scope="col">x (I–III)</th><th scope="col">I</th><th scope="col">II</th><th scope="col">III</th><th scope="col">x (IV)</th><th scope="col">IV</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>10</td><td>8.04</td><td>9.14</td><td>7.46</td><td>8</td><td>6.58</td></tr>
+          <tr><td>8</td><td>6.95</td><td>8.14</td><td>6.77</td><td>8</td><td>5.76</td></tr>
+          <tr><td>13</td><td>7.58</td><td>8.74</td><td>12.74</td><td>8</td><td>7.71</td></tr>
+          <tr><td>9</td><td>8.81</td><td>8.77</td><td>7.11</td><td>8</td><td>8.84</td></tr>
+          <tr><td>11</td><td>8.33</td><td>9.26</td><td>7.81</td><td>8</td><td>8.47</td></tr>
+          <tr><td>14</td><td>9.96</td><td>8.10</td><td>8.84</td><td>8</td><td>7.04</td></tr>
+          <tr><td>6</td><td>7.24</td><td>6.13</td><td>6.08</td><td>8</td><td>5.25</td></tr>
+          <tr><td>4</td><td>4.26</td><td>3.10</td><td>5.39</td><td>19</td><td>12.50</td></tr>
+          <tr><td>12</td><td>10.84</td><td>9.13</td><td>8.15</td><td>8</td><td>5.56</td></tr>
+          <tr><td>7</td><td>4.82</td><td>7.26</td><td>6.42</td><td>8</td><td>7.91</td></tr>
+          <tr><td>5</td><td>5.68</td><td>4.74</td><td>5.73</td><td>8</td><td>6.89</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <noscript>
+    <p>The four plots, their one-line notes, and the data table above are complete
+    without JavaScript. Scripts only add tap-to-reveal detail.</p>
+  </noscript>
+</main>
+
+<script>
+  (function () {
+    var plots = Array.prototype.slice.call(document.querySelectorAll('.plot'));
+    var detail = document.getElementById('detail');
+    var resetBtn = document.getElementById('reset');
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#data-table tbody tr'));
+    var names = ['I', 'II', 'III', 'IV'];
+    var notes = [
+      'nearly linear',
+      'curved, not linear',
+      'nearly a line, one outlier',
+      'one x-outlier makes the line'
+    ];
+    var readings = [
+      'The points hug a straight line. This is the well-behaved set that makes the shared statistics look trustworthy.',
+      'The points trace a curve. A straight-line fit is wrong here, yet the shared correlation says otherwise.',
+      'Almost perfectly linear, except one point that sits far above the line and drags the whole fit down.',
+      'Every point but one shares x = 8. The single point at x = 19 creates the entire correlation.'
+    ];
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var overviewHTML = detail.innerHTML;
+    var selected = null;
+
+    function valuesFor(i) {
+      return rows.map(function (tr) {
+        var cells = tr.children;
+        if (i < 3) {
+          return { x: cells[0].textContent.trim(), y: cells[i + 1].textContent.trim() };
+        }
+        return { x: cells[4].textContent.trim(), y: cells[5].textContent.trim() };
+      });
+    }
+
+    function render(html) {
+      detail.innerHTML = html;
+      if (!reduced) {
+        detail.classList.remove('fade');
+        void detail.offsetWidth; // restart the animation
+        detail.classList.add('fade');
+      }
+    }
+
+    function renderSet(i) {
+      var list = valuesFor(i).map(function (v) {
+        return '<li>x ' + v.x + ' · y ' + v.y + '</li>';
+      }).join('');
+      render(
+        '<h2>Set ' + names[i] + ' — ' + notes[i] + '</h2>' +
+        '<p class="what">' + readings[i] + '</p>' +
+        '<ul class="values">' + list + '</ul>' +
+        '<p class="hint">Tap another set to compare, or press "Show all" / Esc to return.</p>'
+      );
+    }
+
+    function reset() {
+      selected = null;
+      plots.forEach(function (btn) { btn.setAttribute('aria-pressed', 'false'); });
+      render(overviewHTML);
+    }
+
+    plots.forEach(function (btn, i) {
+      btn.addEventListener('click', function () {
+        if (selected === i) {
+          reset();
+        } else {
+          selected = i;
+          plots.forEach(function (b, j) { b.setAttribute('aria-pressed', String(j === i)); });
+          renderSet(i);
+        }
+      });
+      btn.addEventListener('focus', function () { renderSet(i); });
+      btn.addEventListener('blur', function () {
+        if (selected === null) { render(overviewHTML); } else { renderSet(selected); }
+      });
+    });
+
+    resetBtn.addEventListener('click', reset);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { reset(); }
+    });
+  })();
+</script>
+</body>
+</html>

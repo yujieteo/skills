@@ -10,8 +10,9 @@ an API endpoint (optionally with a local credentials file path), or a CSV/data
 file — and wants a new, or refreshed, static visualization generated in this
 `visuals` repo and published to the Visuals section of teoyujie.org.
 
-Full design rationale lives in `visuals-design-spec.md`; this file is the
-executable workflow.
+Full design rationale lives in [visuals-design-spec.md](visuals-design-spec.md);
+this file is the executable workflow. A worked example that follows the spec is
+[examples/anscombe-quartet/index.html](examples/anscombe-quartet/index.html).
 
 ## Privacy and scope
 
@@ -103,8 +104,12 @@ yujieteo/site/                        # sibling repo, checked out alongside
 7. **Generate `visuals/viz/<slug>/index.html`** as one dependency-free file.
    Inline all CSS, data, and JavaScript. Emit exactly one visible key message
    and one interactive visualization. Use interaction only to reveal more of
-   the same story. Do not add external assets, dependencies, CDN links, a build
-   step, or a second chart. Use compact row arrays, CSV, or TSV for flat data
+   the same story. Follow the design rules in
+   [visuals-design-spec.md](visuals-design-spec.md) — mobile-first sizing,
+   Tufte data-ink, and the interaction rules — and use
+   [examples/anscombe-quartet/index.html](examples/anscombe-quartet/index.html)
+   as the reference implementation. Do not add external assets, dependencies,
+   CDN links, a build step, or a second chart. Use compact row arrays, CSV, or TSV for flat data
    and minimal nested JSON for hierarchical data. Register the fixed, read-only WebMCP
    baseline plus at most one
    viz-specific tool:
@@ -214,8 +219,11 @@ yujieteo/site/                        # sibling repo, checked out alongside
     `git diff --check` and review the diff in both repos before committing.
 
 12. **Commit** the intended changes in both `visuals` and `yujieteo/site`, and
-    **push** the branches requested by the user. Do not silently substitute
-    another branch name in either repo.
+    **push** the branches requested by the user. Before committing, run the
+    pre-commit checklist in
+    [visuals-design-spec.md](visuals-design-spec.md) on the new or refreshed
+    `index.html` and fix anything it flags. Do not silently substitute another
+    branch name in either repo.
 
 13. **Deploy** `yujieteo/site`'s generated output over SCP, following the exact
     pattern used by `publish-site-notes`:
