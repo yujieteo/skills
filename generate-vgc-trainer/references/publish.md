@@ -12,7 +12,7 @@ Follow [site-integration](../../generate-visualization/references/site-integrati
 
 1. Stub `data/visuals/<slug>.yaml`: `slug`, `title`, `summary` (same as the page description), `source_url`, `fetched`, `html_path`, `data_path` (`raw.json`), `webmcp_tools: [get_data, get_metadata, query]`, `tags: [pokemon, vgc, strategy, training]`, `category`.
 2. Check out visuals at the merged commit and bump the CI `ref:` on the visuals checkout step to that full SHA.
-3. Build with `VISUALS_REPO=<path> python scripts/build.py` after `scripts/validate.py`, then `git diff --exit-code -- site` must be clean. Commit the generated files it produced, including the corpus revision metadata it refreshes. Never hand-edit them.
+3. Build from the site repo root with `.venv/bin/python scripts/validate.py` then `.venv/bin/python scripts/build.py`. `build.py` finds the visuals checkout as a sibling by default; set `VISUALS_REPO=<path>` only to override that default. Then `git diff --exit-code -- site` must be clean. Commit the generated files it produced, including the corpus revision metadata it refreshes. Never hand-edit them.
 4. Verify locally: gallery entry, page, `data.json` return 200; the page matches the pinned source byte for byte; no console errors.
 
 ## Deploy
