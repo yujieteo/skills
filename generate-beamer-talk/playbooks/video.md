@@ -14,11 +14,15 @@ same `script.json`, same `timings.json`, same timing API in the scene runtime.
    - the caption sits below the slide;
    - the last reveal lands by the last sentence.
    Fix narration or overlays in talk.tex and rerun.
-3. **Voice it.** Run generate-explainer-video's `synthesize.py` on
+3. **Voice it.** The talk video speaks British English by default:
+   `script.json` carries `bf_emma` (`to_manim.py --voice bm_george` for a male
+   voice, `af_heart` for American). Kokoro takes the pronunciation from the
+   id's first letter (`b` British), and `synthesize.py` builds that pipeline,
+   so write British spelling in `\narration`. Run generate-explainer-video's `synthesize.py` on
    `talks/<slug>/build/video/script.json`, setting `--target-seconds` to the
    draft's length and giving a wide `--tolerance`. Then rerun `to_manim.py`
    with `--quality m`. It uses Kokoro's timings while they match the script
-   and muxes `narration.wav`. Listen to names and numbers.
+   and its voice, and muxes `narration.wav`. Listen to names and numbers.
 4. **Animate natively where it pays.** For a chart or derivation worth
    animating, add `talks/<slug>/manim/<label>.py` with `animate(scene, frame)`,
    copying `talks/breeden-litzenberger/manim/density.py`, and give the frame

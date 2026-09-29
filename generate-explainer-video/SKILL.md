@@ -19,7 +19,10 @@ follows the invoking repository's own release flow.
 ## Inputs
 
 Take the notes source, tag registry, site name, and voice (default `af_heart`)
-from the invoking repository exactly as `generate-podcast` describes them. Add:
+from the invoking repository exactly as `generate-podcast` describes them.
+For British English use a `b` voice (`bf_emma`, `bf_isabella`, `bm_george`,
+`bm_lewis`); `synthesize.py` picks the Kokoro pipeline language from the
+voice id's first letter, so the voice and pronunciation always match. Add:
 
 - **Explainer store** — a stable directory holding one `<id>/` folder per
   explainer, outside version control if the repository ignores binaries.

@@ -24,6 +24,9 @@
   sentence becomes one caption and one timing anchor, so animations can be
   placed by sentence number (zero-based) in the scene file. Avoid abbreviations
   with full stops ("St.", "vs.") that would split a sentence early.
+- `voice` is a Kokoro voice id. Its first letter sets the pronunciation:
+  `a` American (`af_heart`), `b` British (`bf_emma`, `bm_george`). `--voice`
+  on `synthesize.py` overrides it.
 - `speed` is optional and defaults to 1.0; use it only to trim the runtime by a
   few percent after the wording is final.
 - `sources` lists the notes or files the claims came from, for the hand-off.
