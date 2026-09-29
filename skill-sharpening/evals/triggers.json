@@ -254,6 +254,13 @@
       ]
     },
     {
+      "id": "beamer-talk",
+      "prompt": "Write my seminar talk in LaTeX beamer, with a handout and presenter notes I can use in pdfpc.",
+      "expect": [
+        "generate-beamer-talk"
+      ]
+    },
+    {
       "id": "speaker-notes",
       "prompt": "Give me speaker notes and a talk track for the deck I finished.",
       "expect": [
