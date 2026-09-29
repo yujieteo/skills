@@ -7,15 +7,16 @@ description: "Build or change a LaTeX beamer talk in the owner's beamerswitch te
 
 The template lives in the owner's `template` repository (a sibling checkout of
 `visuals`). Each talk is `talks/<slug>/talk.tex`; `scripts/build.py` compiles
-it six times under different jobnames, and beamerswitch plus `tex/yjtalk.sty`
+it seven times under different jobnames, and beamerswitch plus `tex/yjtalk.sty`
 pick the output from the suffix:
 
 | Output | For |
 | --- | --- |
-| `talk-slides.pdf` | the projector, one page per overlay step |
+| `talk-slides.pdf` | the projector, light, one page per overlay step |
+| `talk-dark.pdf` | the projector, dark palette |
 | `talk-notes.pdf` | presenting with `pdfpc --notes=right` |
 | `talk-script.pdf` | printed notes, one page per frame with a thumbnail |
-| `talk-handout.pdf` | the audience, 3 frames per A4 page |
+| `talk-handout.pdf` | the audience: A4, header, 3 frames with ruled note lines |
 | `talk-trans.pdf` | one page per frame, no overlays |
 | `talk-article.pdf` | readers: frames plus the prose between them |
 
@@ -35,6 +36,9 @@ this skill decides what to do and in what order.
 - Done means `python3 scripts/build.py --check <slug>` passes (lint, stale
   data, TeX errors, overfull boxes, page-count agreement, byte-identical
   rebuild) and you have looked at the rendered slides and script.
+- Colours only through the theme's names (`yjForeground`, `yjAccent`,
+  `yjBlue`, `yjGreen`, `yjSecondary`, `yjBorder`), so the dark variant works
+  unchanged; check it as well as the light slides.
 - Do not push, publish, or edit visuals unless asked.
 
 ## Playbooks
@@ -60,5 +64,5 @@ Load the one that matches the task.
 
 ## Report
 
-Talk path, frame list with titles, the six output page counts, whether
+Talk path, frame list with titles, the seven output page counts, whether
 `--check` passed, the data snapshot date, and anything left to verify.

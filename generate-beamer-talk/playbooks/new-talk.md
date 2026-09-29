@@ -19,7 +19,8 @@
    at, the transition, likely questions. Use `presentation-coach`'s rules for
    content; the notes live in `\note{}`, not a `notes.md`.
 8. **Build and look.** `python3 scripts/build.py --check <slug>`. Render
-   `talk-slides.pdf` and `talk-script.pdf` with `pdftoppm -r 50 -png` and read
+   `talk-slides.pdf`, `talk-dark.pdf` and `talk-script.pdf` with
+   `pdftoppm -r 50 -png` and read
    every page: titles fit, labels legible, nothing clipped, each note matches
    its frame, the article reads as prose.
 9. **Fix at the source and repeat** until `--check` passes and every page

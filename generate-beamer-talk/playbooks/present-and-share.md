@@ -2,6 +2,8 @@
 
 - **Rehearse:** print `talk-script.pdf` or read it on a tablet; one page per
   frame with the slide thumbnail and notes.
+- **Pick light or dark:** light (`talk-slides.pdf`) for bright rooms and
+  projectors that wash out; dark (`talk-dark.pdf`) for dim rooms and screens.
 - **Present:** `make present TALK=<slug>` runs
   `pdfpc --notes=right talks/<slug>/build/talk-notes.pdf`: slides on the
   projector, notes, timer and next slide on your screen. Without pdfpc, show
