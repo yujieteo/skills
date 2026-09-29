@@ -1,0 +1,8 @@
+# Local tooling for generate-explainer-video. ffmpeg, ffprobe, pkg-config, and
+# the Cairo/Pango libraries come from the system package manager (see SKILL.md).
+manim>=0.19
+kokoro>=0.9.4
+# 0.2.4 bundles the eSpeak data files Kokoro needs, including phontab.
+espeakng-loader==0.2.4
+soundfile>=0.12
+numpy>=1.26

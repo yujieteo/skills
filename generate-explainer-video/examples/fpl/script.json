@@ -1,0 +1,72 @@
+{
+  "id": "2026-09-29-fpl-where-the-points-hide",
+  "title": "Fantasy Premier League: where the points hide",
+  "summary": "A three-minute tour of the FPL findings after Gameweek 5 of 2026/27: cheap defenders, flat goalkeeper value, expected goal involvement, ownership lag, price changes, and fixture difficulty.",
+  "date": "2026-09-29",
+  "focus_tags": [
+    "fpl",
+    "football",
+    "statistics",
+    "strategy"
+  ],
+  "voice": "af_heart",
+  "speed": 1.04,
+  "sources": [
+    "wiki/fpl/squad-economics-and-transfer-rules.md",
+    "wiki/fpl/early-season-value-is-in-defense.md",
+    "wiki/fpl/team-defense-explains-cheap-defenders.md",
+    "wiki/fpl/goalkeeper-value-is-flat.md",
+    "wiki/fpl/expected-goals-separate-hot-starts.md",
+    "wiki/fpl/ownership-lags-form.md",
+    "wiki/fpl/price-changes-follow-net-transfers.md",
+    "wiki/fpl/fixture-difficulty-schedules-transfers.md",
+    "wiki/fpl/findings-are-checkable-in-a-public-repo.md"
+  ],
+  "scenes": [
+    {
+      "id": "intro",
+      "title": "Where the points hide",
+      "narration": "Fantasy Premier League hands you 100 million pounds and asks for fifteen players. After five gameweeks of the 2026 to 27 season, the data already shows where the points are hiding. Here is the three minute version."
+    },
+    {
+      "id": "rules",
+      "title": "The rules bound every decision",
+      "narration": "First, the rules. 100 million pounds buys fifteen players: two goalkeepers, five defenders, five midfielders and three forwards, with at most three from any one club. Every decision is bounded by that budget."
+    },
+    {
+      "id": "defenders",
+      "title": "Cheap defenders lead on value",
+      "narration": "Now the surprise. Five of the fifteen highest scorers are defenders. Jayden Bogle of Leeds has 42 points at 4.6 million pounds, which is 9.1 points per million. Pascal Gross returns 8.1, and Maxim De Cuyper 7.6. Erling Haaland, at 15.6 million, returns just 2.5."
+    },
+    {
+      "id": "cleansheets",
+      "title": "Clean sheets are a team property",
+      "narration": "Clean sheets belong to teams, not players. Brighton have the best goal difference in the league, plus 11, and supply two of the leading defenders. Manchester City are plus 8 and supply Gvardiol. So buy the cheapest starting defender from the best current defence, not the most famous name."
+    },
+    {
+      "id": "goalkeepers",
+      "title": "Goalkeeper value is flat",
+      "narration": "Goalkeepers are even flatter. Tzolakis of Hull City has 34 points at 4.7 million. Raya of Arsenal has 30 at 6.1, and Alisson of Liverpool 27 at 5.5. Hull face more shots, so Tzolakis has made 17 saves to Raya's 9. Spend the minimum that buys a guaranteed starter."
+    },
+    {
+      "id": "xgi",
+      "title": "Expected goal involvement",
+      "narration": "Be careful with hot starts. Expected goal involvement, or X G I, is expected goals plus expected assists, and it predicts better than points. Pascal Gross has 7 goal involvements from just 2.63 expected. Joao Pedro has 6 from 2.36. Igor Thiago has only 1 from 3.29. Sell the overperformers and buy the underperformers."
+    },
+    {
+      "id": "ownership",
+      "title": "Ownership lags form",
+      "narration": "Ownership records the past, not the present. Szoboszlai is owned by 32.9 percent of managers but has a form of 3.0. Bogle is owned by just 7.1 percent, with a form of 9.0. And prices follow transfers: Gross rose 0.1 million after 765,270 net transfers in, so buy early."
+    },
+    {
+      "id": "fixtures",
+      "title": "Fixtures give a transfer its horizon",
+      "narration": "Finally, look ahead. Every match carries a difficulty rating from 1 to 5. Over gameweeks 6 to 8, Fulham average 2.0 while Leeds average 4.0. Form is only worth buying when the next three games let it continue."
+    },
+    {
+      "id": "close",
+      "title": "The recap",
+      "narration": "So: spend on cheap defenders from strong defences, keep goalkeepers cheap, trust expected goal involvement over hot streaks, follow the fixtures, and buy before the price rises. Every number here can be rechecked from the F P L A P I, or the archived data on GitHub. Thanks for watching."
+    }
+  ]
+}

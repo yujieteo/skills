@@ -34,6 +34,7 @@ This classification is based on the common installation cohort and matching upst
 The following skills were developed separately in this local collection:
 
 - `append-review-notes`
+- `generate-explainer-video`
 - `generate-podcast`
 - `generate-slide-deck`
 - `generate-visualization`
