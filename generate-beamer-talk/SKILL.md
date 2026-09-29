@@ -1,6 +1,6 @@
 ---
 name: generate-beamer-talk
-description: "Build or change a LaTeX beamer talk in the owner's beamerswitch template, where one talk.tex deterministically produces slides, presenter notes, a printable script, a handout, transparencies and an article. Use for beamer, LaTeX slides, PDF talks, pdfpc notes, or handouts; HTML decks use generate-slide-deck."
+description: "Build or change a LaTeX beamer talk in the owner's beamerswitch template, where one talk.tex deterministically produces slides (light and dark), presenter notes, a script, a handout, an article, an interactive web deck and a narrated Manim video. Use for beamer, LaTeX slides, pdfpc notes, handouts, or converting such a talk; HTML-first decks use generate-slide-deck."
 ---
 
 # Generate beamer talk
@@ -19,6 +19,14 @@ pick the output from the suffix:
 | `talk-handout.pdf` | the audience: A4, header, 3 frames with ruled note lines |
 | `talk-trans.pdf` | one page per frame, no overlays |
 | `talk-article.pdf` | readers: frames plus the prose between them |
+
+Two converters start from the built PDFs:
+- `scripts/to_web.py` builds an interactive web deck. It has SVG pages in
+  light and dark, an overview, search, a transcript, a data panel, a presenter
+  window and WebMCP.
+- `scripts/to_manim.py` builds a Manim video in generate-explainer-video's
+  format. The video speaks `\narration{}`, and a talk can replace any frame
+  with a native animation.
 
 The template repo's `SKILLS.md` routes to its own sub-skills for repo detail;
 this skill decides what to do and in what order.
@@ -52,6 +60,8 @@ Load the one that matches the task.
 | Refresh data, fix a failing build, or edit an existing talk | [playbooks/refresh-and-fix.md](playbooks/refresh-and-fix.md) |
 | Change the template itself: theme, modes, variants, build, starter | [playbooks/template-change.md](playbooks/template-change.md) |
 | Rehearse, present, or share the outputs | [playbooks/present-and-share.md](playbooks/present-and-share.md) |
+| Turn the talk into an interactive web deck | [playbooks/web-deck.md](playbooks/web-deck.md) |
+| Turn the talk into a narrated Manim video | [playbooks/video.md](playbooks/video.md) |
 
 ## Reference talks
 

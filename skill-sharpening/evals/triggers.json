@@ -261,6 +261,13 @@
       ]
     },
     {
+      "id": "beamer-to-web-video",
+      "prompt": "Convert my beamer talk.tex into an interactive web version and a narrated manim video.",
+      "expect": [
+        "generate-beamer-talk"
+      ]
+    },
+    {
       "id": "speaker-notes",
       "prompt": "Give me speaker notes and a talk track for the deck I finished.",
       "expect": [

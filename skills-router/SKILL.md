@@ -85,7 +85,7 @@ Pick the row that matches the task, load only that skill, and let it load its ow
 |---|---|
 | Data source to static visualization | `generate-visualization` |
 | Visualizations to a slide deck, then speaker notes | `generate-slide-deck`, `presentation-coach` |
-| LaTeX beamer talk: slides, pdfpc notes, handout, article from one `.tex` | `generate-beamer-talk` |
+| LaTeX beamer talk: slides, pdfpc notes, handout, article, web deck, Manim video from one `.tex` | `generate-beamer-talk` |
 | Notes to a podcast episode or explainer video | `generate-podcast`, `generate-explainer-video` |
 | Sharpen and publish notes | `append-review-notes` |
 | Regret and experiment log from notes | `regret-minimizer-microblog` |
