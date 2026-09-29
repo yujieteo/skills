@@ -44,6 +44,7 @@ The following skills were developed separately in this local collection:
 - `presentation-coach`
 - `regret-minimizer-microblog`
 - `skill-sharpening`
+- `skills-router`
 - `vgc-meta-research`
 - `write-metarational-blogpost`
 
