@@ -5,7 +5,7 @@ description: Build an interactive Pokemon VGC tactical-practice trainer from a s
 
 # Generate a VGC tactical trainer
 
-A trainer is a static page where the player presses a button to choose a line each turn and sees the order the turn resolves in, why it works or fails, and a takeaway. It teaches fundamentals (Protect, Fake Out, Quick Guard, pivots, speed control) in common scenarios of one regulation. It is a specialisation of [generate-visualization](../generate-visualization/SKILL.md): load that skill for the design spec, the WebMCP baseline, site integration and deploy. This skill adds the domain layer.
+A trainer is a static page where the player presses a button to choose a line each turn and sees the order the turn resolves in, why it works or fails, and a takeaway. It teaches fundamentals (Protect, Fake Out, Quick Guard, pivots, speed control) in common scenarios of one regulation. It is a specialisation of [generate-visualization](../generate-visualization/SKILL.md): load that skill for the design spec, the WebMCP baseline, site integration and deploy. Like every visual it inherits the canonical [interactive-visual-spec](../interactive-visual-spec/SKILL.md), which wins on any disagreement. This skill adds the domain layer.
 
 Worked source, read only when you need a concrete shape: the `yujieteo/visuals` trainer (`scripts/build_vgc_protect_fakeout_pivot_trainer.py`, `data/vgc-protect-fakeout-pivot-trainer/`, `viz/vgc-protect-fakeout-pivot-trainer/`, PR 9) and its site publication (`yujieteo/site` PR 16). Do not copy its scenarios or team claims; reproduce the method.
 

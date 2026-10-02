@@ -16,9 +16,11 @@ Assert, at least: source ids resolve and `meta.sources` equals `raw.sources`; te
 
 ## 3. Browser
 
+Technical browser E2E belongs in the dedicated technical E2E repository ([test ownership](../../interactive-visual-spec/references/test-ownership.md), §28). That repository does not exist yet; until it does, these checks stand in for it here, and they move there when it is created.
+
 Serve the repo (`python3 -m http.server`) and use `chrome-devtools-axi`.
 
-- Widths: `emulate --viewport "360x800x2,mobile,touch"`, then 390 and 844; then 1280. `resize` will not go below about 500 px, so use `emulate` for phones.
+- Widths: `emulate --viewport "320x800x2,mobile,touch"`, then 360, 390 and 844; then 1280. `resize` will not go below about 500 px, so use `emulate` for phones.
 - At each width: `document.documentElement.scrollWidth <= innerWidth`; ladder text not clipped after a resize; interactive elements at least 44 px tall; no `console` errors; keyboard reaches every option.
 - Drive every scenario: best line to the takeaway; a wrong line shows the verdict and only `Show the best line`; a disabled option shows its reason; tabs tick.
 - WebMCP: stub `navigator.modelContext = {registerTool: t => tools.push(t)}`, re-run the inline script, and confirm three tools, all read-only, and `query({verdict:"best"})` returns rows.
