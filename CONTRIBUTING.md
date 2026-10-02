@@ -8,7 +8,7 @@ This is a personal collection that a daily automation also edits (see `skill-sha
 node skill-sharpening/scripts/verify-collection.mjs
 ```
 
-The same check runs in CI. If you changed the linter itself, also run its tests: `node --test skill-sharpening/scripts/`. If you changed a skill's description or instructions, also run its evals (they call the Anthropic API):
+The same check runs in CI. If you changed the linter itself, also run its tests: `node --test skill-sharpening/scripts/verify-collection.test.mjs`. If you changed a skill's description or instructions, also run its evals (they call the Anthropic API):
 
 ```sh
 cd skill-sharpening/evals && npm ci

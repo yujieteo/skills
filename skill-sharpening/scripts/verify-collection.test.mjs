@@ -1,5 +1,5 @@
 // Behaviour of the collection linter and frontmatter parser on small fixture collections.
-// Run: node --test skill-sharpening/scripts/
+// Run: node --test skill-sharpening/scripts/verify-collection.test.mjs
 
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
