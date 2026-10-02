@@ -103,10 +103,12 @@ yujieteo/site/                        # sibling repo, checked out alongside
    easiest thing to visualize?" If it fails, choose one other candidate. Commit
    after that single revision. There is no abstention path.
 
-6. **Read `visuals/design-tokens.json`** (colors, type scale, spacing). If it
-   doesn't exist yet, derive it once from `yujieteo/site/static/*.css` using
-   judgment, write it to `visuals/design-tokens.json`, and reuse it for every
-   subsequent visualization.
+6. **Start from the shared style.** Paste the
+   [token block](../interactive-visual-spec/assets/style-tokens.css) first in
+   the page's inline `<style>` and follow the
+   [visual style guide](../interactive-visual-spec/references/style-guide.md)
+   for colour, type, controls, chart marks, motion and the site theme. Where
+   `visuals/design-tokens.json` disagrees with the guide, the guide wins.
 
 7. **Generate `visuals/viz/<slug>/index.html`** as one self-contained HTML
    artifact under the canonical

@@ -11,7 +11,10 @@ executable workflow. The worked example
 is the reference implementation of the rules below.
 
 Three concerns govern every chart, in order: mobile first, Tufte data-ink,
-then interaction.
+then interaction. The colours, type, controls and chart marks themselves come
+from the shared [visual style guide](../interactive-visual-spec/references/style-guide.md);
+start every page from its
+[token block](../interactive-visual-spec/assets/style-tokens.css).
 
 ## Mobile first
 
@@ -126,3 +129,5 @@ layer only: publishing also needs the canonical
 7. **Data-ink review:** every gridline, border, legend, fill, and color is
    either data or directly supports reading data — otherwise removed. Labels
    sit on the data, not in a legend.
+8. **House style:** the [style guide checklist](../interactive-visual-spec/references/style-guide.md#checklist)
+   passes, in light and dark.
