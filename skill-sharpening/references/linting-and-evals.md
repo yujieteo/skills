@@ -17,6 +17,7 @@ Lint catches broken structure: a typo in a link, a missing router row, or a desc
 ```sh
 node skill-sharpening/scripts/verify-collection.mjs            # errors fail, warnings print
 node skill-sharpening/scripts/verify-collection.mjs --strict   # warnings fail too
+node --test skill-sharpening/scripts/                         # the linter's own tests, on fixture collections
 ```
 
 Each finding names the file, the problem, and the rule id in brackets:
