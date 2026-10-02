@@ -10,6 +10,30 @@
         "The reply stops and waits for the user's answers instead of producing a finished plan.",
         "The reply does not ask the user for facts an agent could look up itself, such as how many cron entries exist, without offering to find them."
       ]
+    },
+    {
+      "id": "grilling-compaction-summary",
+      "history": [
+        {
+          "role": "user",
+          "content": "Grill me: I want to move our monolith's background jobs from cron to a Temporal cluster next quarter."
+        },
+        {
+          "role": "assistant",
+          "content": "❓ **Q1** - **Scope**: All jobs, or only the ones that retry or chain?\n\n➡️ Only retrying and chained jobs first.\n\n---\n\n❓ **Q2** - **Hosting**: Self-host Temporal or use Temporal Cloud?\n\n➡️ Temporal Cloud, to avoid running Cassandra.\n\n---\n\n❓ **Q3** - **Done**: What makes the migration finished?\n\n➡️ Every migrated job has run from Temporal for two weeks with no cron fallback."
+        },
+        {
+          "role": "user",
+          "content": "Q1 agreed. Q2: Temporal Cloud, but I'm worried about data residency for EU customers, so that's not settled. Q3 agreed."
+        }
+      ],
+      "prompt": "Our context is about to be compacted. Write the summary of this session that you'll resume from.",
+      "assertions": [
+        "The summary records the settled decisions: only retrying and chained jobs move first, and the two-week no-fallback completion criterion.",
+        "The summary records the open data-residency objection about Temporal Cloud for EU customers as unresolved.",
+        "The summary states the completion criteria for the session or migration.",
+        "The summary names a concrete next action, such as resolving the data-residency question in the next round."
+      ]
     }
   ]
 }
