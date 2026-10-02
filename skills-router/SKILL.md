@@ -101,5 +101,6 @@ Pick the row that matches the task, load only that skill, and let it load its ow
 |---|---|
 | Issue tracker, labels, doc layout for the engineering skills | `setup-matt-pocock-skills` |
 | pstack host settings | `setup-pstack` |
+| Fresh Mac to the working agent workstation (herdr, firstmate, Claude Code, Codex) | `mac-agent-workstation` |
 | Refine or publish this whole collection | `skill-sharpening` |
 | Edit this repository | [references/working-in-this-repo.md](references/working-in-this-repo.md) |

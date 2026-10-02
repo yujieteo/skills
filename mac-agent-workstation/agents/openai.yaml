@@ -1,0 +1,5 @@
+interface:
+  display_name: "Mac Agent Workstation"
+  short_description: "Set up a Mac for agent work"
+policy:
+  allow_implicit_invocation: false
