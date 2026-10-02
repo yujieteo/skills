@@ -9,7 +9,10 @@ Turn one topic into a deck of about ten slides in which several visualizations
 build a single argument. It extends `generate-visualization`: that skill makes
 one chart with one message; this one sequences several under one thesis. Reuse
 its data, privacy, design-token and site-integration rules instead of restating
-them, and do not modify that skill.
+them, and do not modify that skill. A deck is an interactive visual, so it
+also inherits the canonical
+[interactive-visual-spec](../interactive-visual-spec/SKILL.md), which wins on
+any disagreement.
 
 The output is static files: one `index.html` with all CSS, JavaScript and data
 inlined, plus a sidecar `notes.md` written by `presentation-coach`. No build

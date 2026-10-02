@@ -5,7 +5,7 @@ description: Build an interactive Pokemon VGC tactical-practice trainer from a s
 
 # Generate a VGC tactical trainer
 
-A trainer is a static page where the player presses a button to choose a line each turn and sees the order the turn resolves in, why it works or fails, and a takeaway. It teaches fundamentals (Protect, Fake Out, Quick Guard, pivots, speed control) in common scenarios of one regulation. It is a specialisation of [generate-visualization](../generate-visualization/SKILL.md): load that skill for the design spec, the WebMCP baseline, site integration and deploy. This skill adds the domain layer.
+A trainer is a static page where the player presses a button to choose a line each turn and sees the order the turn resolves in, why it works or fails, and a takeaway. It teaches fundamentals (Protect, Fake Out, Quick Guard, pivots, speed control) in common scenarios of one regulation. It is a specialisation of [generate-visualization](../generate-visualization/SKILL.md): load that skill for the design spec, the WebMCP baseline, site integration and deploy. Like every visual it inherits the canonical [interactive-visual-spec](../interactive-visual-spec/SKILL.md), which wins on any disagreement. This skill adds the domain layer.
 
 Worked source, read only when you need a concrete shape: the `yujieteo/visuals` trainer (`scripts/build_vgc_protect_fakeout_pivot_trainer.py`, `data/vgc-protect-fakeout-pivot-trainer/`, `viz/vgc-protect-fakeout-pivot-trainer/`, PR 9) and its site publication (`yujieteo/site` PR 16). Do not copy its scenarios or team claims; reproduce the method.
 
@@ -29,7 +29,7 @@ Resolve these from the request; ask only for what has no sensible default.
 3. **Author data.** Start from [assets/starter](assets/starter/) and the schema in [data-model.md](references/data-model.md). Outcomes are authored, not simulated.
 4. **Build.** Write `scripts/build_<slug>.py` that renders one dependency-free `viz/<slug>/index.html`, registers the three read-only WebMCP tools, and has `--verify`. Follow [data-model.md](references/data-model.md) for page behaviour and the design spec in generate-visualization.
 5. **Check accuracy.** Walk every scenario against [accuracy-traps.md](references/accuracy-traps.md), then run `python3 generate-vgc-trainer/scripts/verify-trainer-data.py data/<slug>`. Fix a class of error everywhere, not only where it was reported.
-6. **Verify.** Run the builder with `--verify`, then drive the page in a browser at 360, 390 and desktop widths. Read [verification.md](references/verification.md).
+6. **Verify.** Run the builder with `--verify`, then drive the page in a browser at 320, 360, 390, 844 and desktop widths. Read [verification.md](references/verification.md).
 7. **Ship.** Open the visuals PR with the assumptions section first. Publishing to the site is a second PR and a deploy; read [publish.md](references/publish.md).
 8. **Report** the PR URLs, assumptions, verification evidence, and what is not done.
 

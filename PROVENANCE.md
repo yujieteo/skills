@@ -40,6 +40,7 @@ The following skills were developed separately in this local collection:
 - `generate-slide-deck`
 - `generate-visualization`
 - `generate-vgc-trainer`
+- `interactive-visual-spec`
 - `grilling`
 - `internalise-computation`
 - `math-source-hunter`

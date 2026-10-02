@@ -247,6 +247,13 @@
       ]
     },
     {
+      "id": "visual-domain-spec",
+      "prompt": "Write the spec for a new interactive Bayes' rule visual for my site; it should inherit the parent requirements every visual shares.",
+      "expect": [
+        "interactive-visual-spec"
+      ]
+    },
+    {
       "id": "slide-deck",
       "prompt": "Build a slide deck from these three charts for my talk on Thursday.",
       "expect": [

@@ -10,8 +10,15 @@ an API endpoint (optionally with a local credentials file path), or a CSV/data
 file — and wants a new, or refreshed, static visualization generated in this
 `visuals` repo and published to the Visuals section of teoyujie.org.
 
-Full design rationale lives in [visuals-design-spec.md](visuals-design-spec.md);
-this file is the executable workflow. A worked example that follows the spec is
+Every visualization inherits the canonical parent specification,
+[interactive-visual-spec](../interactive-visual-spec/SKILL.md): the artifact
+contract, state and export, interaction and accessibility, pedagogy, visual
+grammar, test ownership, and the definition of done. Load the reference for the
+concern at hand from its table; do not restate it here. The data-chart layer on
+top of it lives in [visuals-design-spec.md](visuals-design-spec.md); this file
+is the executable workflow. Where either disagrees with the canonical
+specification, the canonical specification wins. A worked example of the
+data-chart layer is
 [examples/anscombe-quartet/index.html](examples/anscombe-quartet/index.html).
 
 ## Privacy and scope
@@ -101,16 +108,21 @@ yujieteo/site/                        # sibling repo, checked out alongside
    judgment, write it to `visuals/design-tokens.json`, and reuse it for every
    subsequent visualization.
 
-7. **Generate `visuals/viz/<slug>/index.html`** as one dependency-free file.
-   Inline all CSS, data, and JavaScript. Emit exactly one visible key message
-   and one interactive visualization. Use interaction only to reveal more of
-   the same story. Follow the design rules in
-   [visuals-design-spec.md](visuals-design-spec.md) — mobile-first sizing,
-   Tufte data-ink, and the interaction rules — and use
+7. **Generate `visuals/viz/<slug>/index.html`** as one self-contained HTML
+   artifact under the canonical
+   [artifact contract](../interactive-visual-spec/references/artifact-contract.md)
+   (§2 to §4): inline CSS, data, and JavaScript, no network request after
+   generation, and working through `file://` and in an iframe. Organise the
+   script as [source-organisation.md](../interactive-visual-spec/references/source-organisation.md)
+   describes. Emit exactly one visible key message. Every further
+   representation (the data table, detail on selection) shows the same story
+   and stays synchronized with it (§17); use interaction only to reveal more of
+   that story, and do not add a second, unrelated chart. Follow the
+   data-chart rules in [visuals-design-spec.md](visuals-design-spec.md) and use
    [examples/anscombe-quartet/index.html](examples/anscombe-quartet/index.html)
-   as the reference implementation. Do not add external assets, dependencies,
-   CDN links, a build step, or a second chart. Use compact row arrays, CSV, or TSV for flat data
-   and minimal nested JSON for hierarchical data. Register the fixed, read-only WebMCP
+   as their reference implementation. Do not add external assets,
+   dependencies, CDN links, or a runtime build step. Use compact row arrays,
+   CSV, or TSV for flat data and minimal nested JSON for hierarchical data. Register the fixed, read-only WebMCP
    baseline plus at most one
    viz-specific tool:
    ```js
@@ -144,7 +156,8 @@ yujieteo/site/                        # sibling repo, checked out alongside
    // mc?.registerTool({ name: 'drill_down', ... , annotations: { readOnlyHint: true } });
    ```
    Fall back gracefully (tools simply aren't registered) where `modelContext`
-   isn't available — do not add the `@mcp-b` polyfill as an external dependency
+   isn't available, so the page never requires it (§2 forbids requiring
+   runtime APIs) — do not add the `@mcp-b` polyfill as an external dependency
    unless the user asks for it explicitly.
 
 8. **Regenerate `visuals/index.html`** (the gallery) by scanning every
@@ -173,8 +186,13 @@ yujieteo/site/                        # sibling repo, checked out alongside
     **push** the branches requested by the user. Before committing, run the
     pre-commit checklist in
     [visuals-design-spec.md](visuals-design-spec.md) on the new or refreshed
-    `index.html` and fix anything it flags. Do not silently substitute another
-    branch name in either repo.
+    `index.html` and fix anything it flags, and test each layer where
+    [test-ownership.md](../interactive-visual-spec/references/test-ownership.md)
+    puts it: model fixtures, deterministic generation and static artifact
+    checks in `visuals`; technical browser E2E in the dedicated technical E2E
+    repository (not yet created; until it exists, the browser checks in
+    `visuals` stand in for it); and only site integration in `yujieteo/site`.
+    Do not silently substitute another branch name in either repo.
 
 13. **Deploy** `yujieteo/site`'s generated output over SCP. Follow
     [references/deploy.md](references/deploy.md) exactly; deploy `corpus.json`
@@ -184,7 +202,11 @@ yujieteo/site/                        # sibling repo, checked out alongside
     reference. Restore preserved files if any deployed artifact is bad.
 
 15. **Report**: the commit(s), pushed branch(es), deployed files, verification
-    result, and the data's `fetched` date (for staleness visibility). Mention
+    result, and the data's `fetched` date (for staleness visibility). The
+    visualization is done only when all four layers of the
+    [definition of done](../interactive-visual-spec/references/acceptance.md)
+    (§44) hold and the §38 manual acceptance pass is complete; name any layer
+    that is not. Mention
     any remaining working-tree changes in either repo.
 
 ## Refreshing an existing visualization
