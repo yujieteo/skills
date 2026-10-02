@@ -29,6 +29,10 @@ The 45 sections are split by concern. Each section lives in exactly one referenc
 
 Building a new visual touches all of them; read the table top to bottom. A change touches only the rows it changes, plus [test-ownership.md](references/test-ownership.md) and [acceptance.md](references/acceptance.md), which every change ends at.
 
+## Visual style guide
+
+[style-guide.md](references/style-guide.md) is the shared look that §7 asks for: colour tokens for both themes, type, spacing, panels, controls, chart marks, motion, and how a visual follows the site's Light, Dark or System choice. It is not a numbered section; [assets/style-tokens.css](assets/style-tokens.css) holds its values as one block to paste into a visual. Building or restyling a visual reads it with the visual grammar row above.
+
 ## Domain-specific specs inherit this one
 
 A spec for one visual follows the template in [domain-spec-template.md](references/domain-spec-template.md). It says near the beginning that all requirements from the Canonical Interactive Visual Specification apply, describes only its domain, and overrides a requirement here only explicitly, naming the section it overrides.
