@@ -6,6 +6,16 @@ The values are not new. They are the site's own tokens (`static/css/style.css` i
 
 [`assets/style-tokens.css`](../assets/style-tokens.css) holds every value below as one block. A new visual pastes it first in its inline `<style>` and adds only domain rules after it. Never link to it: a visual stays one self-contained file (§2).
 
+## Coverage
+
+The guide covers every visual in the site's catalogue (`data/visuals/*.yaml` in `yujieteo/site`), whether ported, pinned from `yujieteo/visuals` or built in the site (`fbd`), and every new one. One visual is exempt and keeps its own look:
+
+| Visual | Why it is exempt |
+|---|---|
+| `beamdswitch` | It is vendored unchanged from the private `yujieteo/beamdswitch` repository (its folder's README names the upstream), so it follows that project's design rather than the site's. |
+
+A visual's own specification may raise a limit the guide strains, but never drop a guide item, and it names the new figure. For example, information-gain raised its own-code budget to 100,500 bytes to fit the theme script and dark blocks.
+
 ## Theme: follow the site
 
 A visual is a standalone page on the same origin as the site, so it reads the reader's site-wide theme choice directly.
