@@ -42,6 +42,7 @@ The following skills were developed separately in this local collection:
 - `generate-vgc-trainer`
 - `interactive-visual-spec`
 - `grilling`
+- `mac-agent-workstation`
 - `internalise-computation`
 - `math-source-hunter`
 - `presentation-coach`

@@ -338,6 +338,13 @@
       ]
     },
     {
+      "id": "mac-agent-workstation",
+      "prompt": "I just got a new MacBook. Get it to the same agent setup as my current machine: herdr, firstmate, Claude Code, Codex and my skills.",
+      "expect": [
+        "mac-agent-workstation"
+      ]
+    },
+    {
       "id": "none-arith",
       "prompt": "What's 17 times 23?",
       "expect": []
