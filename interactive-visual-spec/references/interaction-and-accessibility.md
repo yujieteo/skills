@@ -1,6 +1,6 @@
 # Interaction and accessibility
 
-Part of the [canonical interactive visual specification](../SKILL.md): how every user reaches the visual: layout, touch, keyboard, search, accessibility, no-JS and print. Sections 8 to 23, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): how every user reaches the visual: layout, touch, keyboard, search, accessibility, no-JS and print. Sections 8, 9, 10, 11, 20, 22 and 23, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 8. Responsive Design
 

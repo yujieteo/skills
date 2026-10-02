@@ -1,6 +1,6 @@
 # State, URL, persistence and export
 
-Part of the [canonical interactive visual specification](../SKILL.md): how state flows, is addressed, persisted and exported. Sections 5, 12, 13, 14, 15, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): how state flows, is addressed, persisted and exported. Sections 5, 12, 13, 14 and 15, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 5. State Architecture
 

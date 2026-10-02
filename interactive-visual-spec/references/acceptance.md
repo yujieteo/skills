@@ -1,6 +1,6 @@
 # Acceptance and definition of done
 
-Part of the [canonical interactive visual specification](../SKILL.md): the manual pass before publishing and the four-layer definition of done. Sections 38, 44, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): the manual pass before publishing and the four-layer definition of done. Sections 38 and 44, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 38. Manual Acceptance Pass
 

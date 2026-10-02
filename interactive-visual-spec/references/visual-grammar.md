@@ -1,6 +1,6 @@
 # Visual grammar and motion
 
-Part of the [canonical interactive visual specification](../SKILL.md): how the family of visuals looks and moves. Sections 7, 21, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): how the family of visuals looks and moves. Sections 7 and 21, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 7. Visual Grammar
 

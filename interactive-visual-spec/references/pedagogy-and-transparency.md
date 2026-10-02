@@ -1,6 +1,6 @@
 # Pedagogy and transparency
 
-Part of the [canonical interactive visual specification](../SKILL.md): what the visual teaches and how honestly it reasons. Sections 1 to 42, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): what the visual teaches and how honestly it reasons. Sections 1, 6, 16, 17, 18, 19, 41 and 42, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 1. Objective
 

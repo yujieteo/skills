@@ -1,6 +1,6 @@
 # Domain-specific spec template
 
-Part of the [canonical interactive visual specification](../SKILL.md): the shape of every domain-specific visual spec that inherits this one. Sections 43, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): the shape of every domain-specific visual spec that inherits this one. Section 43, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 43. Architecture of a Domain-Specific Spec
 

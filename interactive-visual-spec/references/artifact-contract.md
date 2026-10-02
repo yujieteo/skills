@@ -1,6 +1,6 @@
 # Artifact contract
 
-Part of the [canonical interactive visual specification](../SKILL.md): what the delivered file is and where it runs. Sections 2 to 40, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): what the delivered file is and where it runs. Sections 2, 3, 4, 24, 39 and 40, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
 ## 2. Fundamental Artifact Constraint
 
