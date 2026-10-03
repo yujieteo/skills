@@ -88,4 +88,4 @@ bun test orch watch-pr
 bun run typecheck
 ```
 
-The [CI workflow](.github/workflows/ci.yml) runs the collection linter, the eval file check, and the Poteto Mode tests and type checker on every push to `main` and every pull request. The [Evals workflow](.github/workflows/evals.yml) runs the paid evals when started by hand.
+The [CI workflow](.github/workflows/ci.yml) runs the collection linter, the eval file check, the JavaScript type check, and the Poteto Mode tests and type checker on every push to `main` and every pull request. The [Evals workflow](.github/workflows/evals.yml) runs the paid evals when started by hand.
