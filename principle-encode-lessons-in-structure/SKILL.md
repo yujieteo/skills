@@ -22,6 +22,14 @@ When you catch yourself writing the same instruction a second time:
 
 **Corollary:** If the fix is structural, only use the structural fix. The instruction is the symptom.
 
+**Hooks and locks turn rules into facts.** A rule in a brief depends on every agent reading and obeying it. A pre-tool hook that blocks destructive commands, or a lock that lets one agent at a time run the ship sequence (merge, verify, push, deploy, health check), cannot be skipped.
+
+**When review catches a bug, ask why it was there.** The finding shows that the process let the bug in. Fix the instance, then add the check that would have caught it. If someone keeps stealing your bike, buy a lock.
+
+**Lint the process, not only the code.** Where work records its own state (a spec marked complete, a brief marked finished), check that state against what the record shows (its tickets, its pull request), so drift fails a check instead of waiting for a reader.
+
+Sources: hooks and the push lock are from David Ondrej's [own agentic setup](https://www.youtube.com/watch?v=c9nRxEy1kUY); the bike lock is from Matt Pocock's [interview](https://www.youtube.com/watch?v=nQwJVHCtDDY); the process lint is Dan Zakon's, from the [10X interview](https://www.youtube.com/watch?v=QBfXiWvM0qc), all on David Ondrej's channel.
+
 **Feedback loop:**
 - **Capture every correction.** When the human intervenes or tests fail, decide if it's a one-off or a pattern.
 - **Route to the right layer.** One-off -> brain note. Recurring fix -> skill or lint rule. Systemic issue -> principle.

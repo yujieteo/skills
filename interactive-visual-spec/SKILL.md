@@ -39,7 +39,7 @@ A spec for one visual follows the template in [domain-spec-template.md](referenc
 
 ## Three test layers
 
-Model tests belong in the visual's own repository, technical browser E2E in a dedicated technical E2E repository, and website integration in the site repository (§26 to §34). No technical E2E repository exists yet. Until it does, the visual repository's own browser checks stand in for it temporarily; they move there when it is created, and the site never takes them over.
+Model tests, technical browser E2E and website integration are three separate owners (§26 to §34). Every public visual is one folder `viz/<slug>/` of the yujieteo/visuals monorepo, which replaced one repository per visual. Model and page tests live in the folder's `tests/`. Technical browser E2E lives in its `e2e/` (`manifest.json`, and `full.test.mjs` for fuller checks), run by the shared harness in the monorepo's `e2e/` in jobs of their own. That harness came from the archived yujieteo/technical-e2e. Website integration stays in yujieteo/site, which never takes the other two over. [test-ownership.md](references/test-ownership.md) says how this maps onto §26 to §28.
 
 ## 45. Core Principle
 

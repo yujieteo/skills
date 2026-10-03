@@ -2,7 +2,7 @@
 
 Load at steps 3 and 4. The builder renders one page from three JSON files; the page never simulates.
 
-## Files under `data/<slug>/`
+## Data files in `viz/<slug>/`
 
 - `raw.json`: `topic`, `sources[{id,url,label,used_for}]`, `regulation{name,official_window,eligibility,format,mega,item_clause,legality_of_team_in_<reg>,sources}`, `team{player,event,placement,record,regulation_played,members[{species,item,ability,nature,moves,types,base_stats}],sources}`, `practice_four`, `species{name:{types,abilities,base_stats,source}}`, `moves{name:{type,category,power,accuracy,priority,pp_showdown,pp_champions,target,effect,source}}`, `protect_chain`, `type_chart`.
 - `meta.json`: `slug`, `source_url`, `sources[]`, `fetched`, `key_file_used`, `assumptions[]`.
@@ -29,6 +29,6 @@ The opponent plan stays hidden until a choice. Tabs show completion ticks. A dis
 
 ## Builder shape
 
-One Python file with stdlib only: `render(raw, scen, meta, tokens)` fills a CSS and JS template from `design-tokens.json` and inlines the data; `verify()` asserts the checks in [verification.md](verification.md); `--verify` re-renders and fails if the committed page is stale, then verifies. Output has one `<h1>`, one `<script>`, a `<noscript>` summary of every takeaway, `aria-live` results, a re-render when width changes, and no external asset. The root gallery uses the shared helper if the repo has one.
+One Python file with stdlib only: `render(raw, scen, meta, tokens)` fills a CSS and JS template from `design-tokens.json` and inlines the data; `verify()` asserts the checks in [verification.md](verification.md); `--verify` re-renders and fails if the committed page is stale, then verifies. Output has one `<h1>`, one `<script>`, a `<noscript>` summary of every takeaway, `aria-live` results, a re-render when width changes, and no external asset. Import the monorepo's shared builder modules from `scripts/` (`page_parts`, `style_guide`) rather than copying them; the catalogue and gallery are generated, never written by the builder.
 
 The three WebMCP tools follow generate-visualization: `get_data`, `get_metadata` and `query` (filter options by `scenario`, `verdict`, `move`), all `readOnlyHint: true`.

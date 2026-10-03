@@ -1,6 +1,6 @@
 # Sourcing rules, legality and team facts
 
-Load at step 1. Output: `data/<slug>/raw.json` and `meta.json`, every claim traceable to a source id.
+Load at step 1. Output: `viz/<slug>/raw.json` and `meta.json`, every claim traceable to a source id.
 
 ## Source order
 

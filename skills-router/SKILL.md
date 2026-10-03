@@ -55,6 +55,7 @@ Pick the row that matches the task, load only that skill, and let it load its ow
 |---|---|
 | Review a diff against standards and spec | `code-review` |
 | Adversarial multi-model review | `interrogate` |
+| How much review a change needs: full pipeline or CI only | `review-by-risk` |
 | Comment audit before review | `no-comments` |
 | Decision trail for unattended work | `show-me-your-work` |
 | Hand the session to another agent | `handoff` |
@@ -67,6 +68,7 @@ Pick the row that matches the task, load only that skill, and let it load its ow
 |---|---|
 | N workers, one merged report | `swarm` |
 | Competing candidates, graft the best | `arena` |
+| Repository layout that many parallel agents can change without conflicts | `parallel-safe-repository` |
 | Full poteto workflow (PR babysit, shipping, autopilot, and more) | `poteto-mode`, which owns its `playbooks/` |
 | Capture my working style as a skill | `automate-me` |
 | Which engineering principle applies | `poteto-mode/references/principles.md`, then the one `principle-*` skill |

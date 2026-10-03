@@ -39,7 +39,7 @@ this skill decides what to do and in what order.
   number on a slide comes from a generated `data/numbers.tex`.
 - Every frame has a `\note{}`. Notes are cues for the presenter, grounded in the
   frame or its data, with a transition that names the next frame's question.
-- Data comes from a snapshot of `visuals/data/<slug>/` plus a `derive.py` with
+- Data comes from a snapshot of a visual's data in `viz/<slug>/` of yujieteo/visuals plus a `derive.py` with
   `--sync` and `--verify`; the talk never reads visuals at build time.
 - Done means `python3 scripts/build.py --check <slug>` passes (lint, stale
   data, TeX errors, overfull boxes, page-count agreement, byte-identical

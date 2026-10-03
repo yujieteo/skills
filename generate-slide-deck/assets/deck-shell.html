@@ -248,7 +248,9 @@ const Deck=(()=>{
   }
   function toggleNotes(){notesOpen=!notesOpen;document.body.classList.toggle('notes-open',notesOpen);fit();renderNotes()}
   function openPresenter(){window.open(location.pathname+'?presenter#'+(i+1),'deck-presenter','width=1360,height=800')}
-  const loadNotes=()=>fetch('notes.md').then(r=>r.ok?r.text():null).then(t=>{if(t){notes=parseNotes(t)}renderNotes()}).catch(()=>renderNotes());
+  /* notes.md is private and never published: request it only from a local preview server, so the public deck makes no 404 request. */
+  const localPreview=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  const loadNotes=()=>!localPreview?renderNotes():fetch('notes.md').then(r=>r.ok?r.text():null).then(t=>{if(t){notes=parseNotes(t)}renderNotes()}).catch(()=>renderNotes());
 
   /* --- input --- */
   const help=$('#help');

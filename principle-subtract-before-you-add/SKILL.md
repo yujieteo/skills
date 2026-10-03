@@ -21,3 +21,4 @@ Make simplification a continual investment. Leave the design slightly simpler an
 - No speculative validators, parsers, or guards beyond what the spec demands
 - Simplify prompts (remove redundant instructions, excessive templates)
 - When a reference has no novel content, delete it rather than leaving a stub
+- Do what was asked and nothing more. With parallel agents every small addition is cheap and sensible on its own; together they are madness (Bjarne Stroustrup on C++ proposals, quoted by swyx in his [interview](https://www.youtube.com/watch?v=EWk9PBbKqzc) on David Ondrej's channel)

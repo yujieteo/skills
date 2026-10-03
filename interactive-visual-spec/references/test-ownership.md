@@ -2,6 +2,18 @@
 
 Part of the [canonical interactive visual specification](../SKILL.md): which repository owns which test, and how CI layers. Sections 26 to 37, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
 
+## Where the layers live
+
+The three layers stay separate, but the first two now share one repository. yujieteo/visuals is a monorepo: one folder `viz/<slug>/` per public visual, replacing one repository per visual, and the technical E2E checks moved in from the archived yujieteo/technical-e2e. Read "visual/source repo" and "technical E2E repo" below as these homes:
+
+| Layer | Home |
+|---|---|
+| Model and page (§27) | `viz/<slug>/tests/` in yujieteo/visuals, run by `python3 scripts/check.py <slug>` in the visual's own CI job |
+| Technical browser E2E (§28, §29, §35) | `viz/<slug>/e2e/manifest.json` and `full.test.mjs`, driven by the shared harness `e2e/` of yujieteo/visuals in CI jobs of their own (one per browser project), pointed at the staged artifact with no site build; the two visuals the site keeps itself have their checks in `e2e/site/<slug>/` there |
+| Website integration (§30) | yujieteo/site, its own tests and its pre-deploy and post-deploy checks |
+
+So §28's "its own repository" is met by its own folder and its own CI jobs: no model test reads `e2e/`, and the site copies neither.
+
 ## 26. Repository Architecture
 
 There are three different responsibilities and they MUST remain separate.
@@ -363,4 +375,4 @@ These tests are often more valuable than pixel comparisons.
 
 ## Why three layers
 
-The important architectural addition is the three-layer ownership rule: model/source tests in the visual repo → standalone browser/technical E2E in a dedicated E2E repo → deployment/integration E2E in the site repo. That prevents the site repository from becoming responsible for the internals of every visual, while still catching failures caused by routing, deployment, gallery generation, iframe policies, or site integration.
+The important architectural addition is the three-layer ownership rule: model/source tests in the visual's own folder → standalone browser/technical E2E in its own `e2e/` folder and CI jobs → deployment/integration E2E in the site repo. That prevents the site repository from becoming responsible for the internals of every visual, while still catching failures caused by routing, deployment, gallery generation, iframe policies, or site integration.

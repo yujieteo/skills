@@ -358,6 +358,20 @@
       "id": "none-capital",
       "prompt": "What's the capital of Portugal?",
       "expect": []
+    },
+    {
+      "id": "review-by-risk-tier",
+      "prompt": "This PR only refreshes one visual's raw.json and the page its builder regenerates. Does it need the full review pipeline or just CI?",
+      "expect": [
+        "review-by-risk"
+      ]
+    },
+    {
+      "id": "parallel-safe-repository-conflicts",
+      "prompt": "Every agent PR in this repo conflicts on the shared index.json that lists all the widgets. How should I restructure the repo so parallel agents stop colliding?",
+      "expect": [
+        "parallel-safe-repository"
+      ]
     }
   ]
 }
