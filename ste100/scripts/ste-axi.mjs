@@ -77,7 +77,7 @@ const CONTRACTION = /\b(?:\w+n['’]t|(?:it|that|there|here|what|who|let|he|she|
 /** @typedef {{ text: string, orig: string, lines: number[] }} Unit */
 
 // Replaces every character of a match with spaces except one marker, so offsets keep their lines. A final ., ! or ?
-// after a letter or digit stays when a capital letter or the end of the line comes next, so that it ends the sentence.
+// after a letter or digit stays when a capital letter or the end of the unit comes next, so that it ends the sentence.
 /** @param {string} s @param {RegExp} re */
 const mask = (s, re) =>
   s.replace(re, (m, /** @type {number} */ at, /** @type {string} */ all) => {
@@ -106,7 +106,7 @@ export function proseUnits(source) {
   const lines = source.split(/\r?\n/);
   /** @type {Unit[]} */
   const units = [];
-  /** @type {Unit | null} */
+  /** @type {{ orig: string, lines: number[] } | null} */
   let current = null;
   let fence = "";
   let quoted = false;
@@ -117,22 +117,21 @@ export function proseUnits(source) {
     if (end > 0) i = end + 1;
   }
   const flush = () => {
-    if (current && current.text.trim()) units.push(current);
+    if (current && current.orig.trim()) units.push({ text: maskSkipped(current.orig), ...current });
     current = null;
     quoted = false;
   };
-  // text is the masked line, orig the same span of the source; masking keeps lengths, so offsets match.
-  /** @param {string} text @param {string} orig @param {number} line */
-  const append = (text, orig, line) => {
-    if (!current) current = { text: "", orig: "", lines: [] };
-    if (current.text) {
-      current.text += " ";
+  // orig is the source text of the unit. flush masks it once for the whole unit; masking keeps lengths, so offsets
+  // match.
+  /** @param {string} orig @param {number} line */
+  const append = (orig, line) => {
+    if (!current) current = { orig: "", lines: [] };
+    if (current.orig) {
       current.orig += " ";
       current.lines.push(line);
     }
-    current.text += text;
     current.orig += orig;
-    for (let k = 0; k < text.length; k++) current.lines.push(line);
+    for (let k = 0; k < orig.length; k++) current.lines.push(line);
   };
   for (; i < lines.length; i++) {
     const raw = lines[i];
@@ -152,33 +151,32 @@ export function proseUnits(source) {
       flush();
       continue;
     }
-    const text = maskSkipped(raw);
     if (/^\s*\|/.test(raw)) {
       flush();
       let at = 0;
-      for (const cell of text.split("|")) {
-        if (cell.trim()) append(cell, raw.slice(at, at + cell.length), line), flush();
+      for (const cell of maskSkipped(raw).split("|")) {
+        if (cell.trim()) append(raw.slice(at, at + cell.length), line), flush();
         at += cell.length + 1;
       }
       continue;
     }
-    const block = /^\s*(>\s*)?(#{1,6}\s+|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)?/.exec(text);
+    const block = /^\s*(>\s*)?(#{1,6}\s+|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)?/.exec(raw);
     if (block && (block[1] || block[2])) {
       const quote = !!block[1];
       const marker = block[2] ?? "";
       if (!(quote && quoted && !marker)) flush();
-      if (quote && !text.slice(block[0].length).trim()) {
+      if (quote && !raw.slice(block[0].length).trim()) {
         flush();
         continue;
       }
       if (/^[-*+\d]/.test(marker)) list = true;
       const pad = " ".repeat(block[0].length);
-      append(pad + text.slice(block[0].length), pad + raw.slice(block[0].length), line);
+      append(pad + raw.slice(block[0].length), line);
       quoted = quote;
       if (marker.startsWith("#")) flush();
       continue;
     }
-    append(text, raw, line);
+    append(raw, line);
   }
   flush();
   return units;

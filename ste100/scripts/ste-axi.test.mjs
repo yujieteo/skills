@@ -160,6 +160,9 @@ test("a masked span in the middle of a sentence does not end the sentence", () =
   for (const t of texts) assert.equal(checkText(t, "t.md").sentences, 1, t);
   const long = 'The tool printed "Done." before the report ' + "has one word ".repeat(5) + "and it ends here.";
   assert.deepEqual(rules(long), ["1:long-descriptive:26 words, max 25"]);
+  assert.deepEqual(rules(long.replace('"Done." ', '"Done."\n')), ["1:long-descriptive:26 words, max 25"]);
+  assert.equal(checkText("Use `x.`\nin the call.", "t.md").sentences, 1);
+  assert.equal(checkText('The tool printed "Done."\nThe test failed.', "t.md").sentences, 2);
 });
 
 test("usage errors, empty and unreadable inputs exit 2, never a pass", () => {
