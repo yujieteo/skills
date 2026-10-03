@@ -79,7 +79,7 @@ Source: developers.google.com/style, fetched 2026-07-18.
 - Write procedures as direct commands, never as narration and never in the passive: "Install the component", not "the component must be installed".
 - Avoid "-ing" words where you can. They take too many grammatical jobs and breed misreadings.
 
-Source: asd-ste100.org (Issue 9, 2025), fetched 2026-07-18. The numbered rules and dictionary live in the spec PDF. The principles above are the transferable core.
+Source: asd-ste100.org (Issue 9, 2025), fetched 2026-07-18. The numbered rules and dictionary live in the spec PDF. The principles above are the transferable core. When the user or project requires full STE for all prose, load `ste100`.
 
 ## Leave no sentence open to two readings (Global English)
 

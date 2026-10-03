@@ -51,6 +51,7 @@ The following skills were developed separately in this local collection:
 - `review-by-risk`
 - `skill-sharpening`
 - `skills-router`
+- `ste100`
 - `vgc-meta-research`
 - `write-metarational-blogpost`
 
