@@ -3,7 +3,8 @@
 // With no flags it prints tsc's own output. With --summary it writes the full tsc log to .typecheck/tsc.log and prints
 // a short TOON verdict instead: totals, error counts by code and by file (largest first, ties by name), and the first
 // errors in tsc's order. Exit codes: 0 no errors, 1 type errors, 2 usage or environment error.
-// Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>]], where --first defaults to 20
+// Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--scope-verdict] [--first <n>]], where --first defaults to 20.
+// --file and --since only narrow the listed errors; the verdict and exit code follow all errors unless --scope-verdict.
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -16,7 +17,7 @@ const PAGES = [
   "generate-visualization/examples/anscombe-quartet/index.html",
 ];
 const LOG = ".typecheck/tsc.log";
-const USAGE = "usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>, default 20]]";
+const USAGE = "usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--scope-verdict] [--first <n>, default 20]]";
 export const INLINE_DIR = ".typecheck/inline/";
 
 // The copy of a page's inline scripts that extract-inline.mjs writes and tsc reports errors under.
@@ -76,39 +77,87 @@ function table(name, fields, rows) {
 /** @param {TscError} e */
 const location = (e) => (e.file ? `${e.file}:${e.line}:${e.col}` : "(config)");
 
-// The TOON summary of parsed errors. scope names the filter applied (for example "file src/a.mjs"), or "all".
-/** @param {TscError[]} errors @param {{ scope?: string, first?: number, log?: string }} [options] */
-export function summarize(errors, { scope = "all", first = 20, log = LOG } = {}) {
-  const byCode = countBy(errors, (e) => e.code);
-  const byFile = countBy(errors, (e) => e.file || "(config)");
+// The TOON summary of parsed errors, and its exit code. scope is the set of reported file names a --file or --since
+// filter keeps (see reportedFiles), or null for no filter. The filter only narrows what is listed: the verdict and the
+// exit code follow every error, unless scopeVerdict asks for a verdict on the scope alone, which the output then says.
+/** @param {TscError[]} all @param {{ scope?: Set<string> | null, label?: string, scopeVerdict?: boolean, first?: number, log?: string }} [options] */
+export function summarize(all, { scope = null, label = "all", scopeVerdict = false, first = 20, log = LOG } = {}) {
+  const shown = scope ? all.filter((e) => scope.has(e.file)) : all;
+  const outside = all.length - shown.length;
+  const judged = scopeVerdict ? shown : all;
+  const fileCount = (/** @type {TscError[]} */ errors) => new Set(errors.map((e) => e.file)).size;
+  const byCode = countBy(shown, (e) => e.code);
+  const byFile = countBy(shown, (e) => e.file || "(config)");
   const lines = [
-    `status: ${errors.length ? "fail" : "pass"}`,
-    `scope: ${cell(scope)}`,
+    `status: ${judged.length ? "fail" : "pass"}`,
+    `verdict: ${scopeVerdict ? "scoped verdict" : "all errors"}`,
+    `scope: ${cell(label)}`,
     "totals:",
-    `  errors: ${errors.length}`,
-    `  files: ${byFile.length}`,
+    `  errors: ${all.length}`,
+    `  files: ${fileCount(all)}`,
   ];
-  if (errors.length) {
+  if (scope) lines.push("scoped:", `  errors: ${shown.length}`, `  files: ${byFile.length}`, `  outside_scope: ${outside}`);
+  if (shown.length) {
     lines.push(...table("by_code", ["code", "count", "example"], byCode.map(([code, c]) => [code, c.count, c.first.message])));
     lines.push(...table("by_file", ["file", "count"], byFile.map(([file, c]) => [file, c.count])));
-    lines.push(...table("first", ["file_line", "code", "message"], errors.slice(0, first).map((e) => [location(e), e.code, e.message])));
+    lines.push(...table("first", ["file_line", "code", "message"], shown.slice(0, first).map((e) => [location(e), e.code, e.message])));
   }
   lines.push(`log: ${log}`);
   const hints = [];
-  if (errors.length) {
+  if (outside) hints.push(`${outside} errors are outside the scope; run \`npm run typecheck -- --summary\` without filters to list them`);
+  if (shown.length) {
     const top = byFile.find(([file]) => file !== "(config)");
-    if (byFile.length > 1 && top) hints.push(`Run \`npm run typecheck -- --summary --file ${shellArg(top[0])}\` to see the errors of the top file`);
+    if (!scope && byFile.length > 1 && top) hints.push(`Run \`npm run typecheck -- --summary --file ${shellArg(top[0])}\` to see the errors of the top file`);
     hints.push(`Read ${log} for the full tsc output`);
-    hints.push("Run `npm run typecheck -- --summary` again after a fix");
   }
+  if (judged.length) hints.push("Run `npm run typecheck -- --summary` again after a fix");
   if (hints.length) lines.push(...table("help", ["hint"], hints.map((h) => [h])));
-  return lines.join("\n");
+  return { text: lines.join("\n"), code: judged.length ? 1 : 0 };
+}
+
+// The files tsc checked, from its --listFiles lines (absolute paths), as repository-relative names.
+/** @param {string} text @param {string} root */
+export function parseListedFiles(text, root) {
+  return new Set(text.split(/\r?\n/).filter((l) => isAbsolute(l)).map((l) => relative(root, l)));
+}
+
+// Resolves --file and --since into the set of reported file names to list. Throws an Error with a usage message when
+// the path is not a checked file of the repository or the ref does not resolve, so a bad filter never gives a pass.
+/** @param {string} root @param {{ file?: string, since?: string }} args @param {Set<string>} checked @param {string} [cwd] */
+export function resolveScope(root, args, checked, cwd = root) {
+  /** @type {Set<string>[]} */
+  const sets = [];
+  const label = [];
+  if (args.file) {
+    const want = relative(root, resolve(cwd, args.file));
+    const inRepo = want !== "" && !want.startsWith("..") && !isAbsolute(want);
+    if (!inRepo || !statSync(join(root, want), { throwIfNoEntry: false })?.isFile()) throw new Error(`--file ${args.file}: no such file in the repository`);
+    const names = reportedFiles([want]);
+    if (![...names].some((f) => f && checked.has(f))) throw new Error(`--file ${want}: tsc does not check this file`);
+    sets.push(names);
+    label.push(`file ${want}`);
+  }
+  if (args.since) {
+    const git = (/** @type {string[]} */ ...a) => execFileSync("git", a, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    try {
+      git("rev-parse", "--verify", "--quiet", `${args.since}^{commit}`);
+    } catch {
+      throw new Error(`--since ${args.since}: not a git commit or ref`);
+    }
+    // Changed tracked files (a renamed file under its new name) plus new untracked ones.
+    const lines = (/** @type {string} */ out) => out.split("\n").filter(Boolean);
+    sets.push(reportedFiles([...lines(git("diff", "--name-only", args.since, "--")), ...lines(git("ls-files", "--others", "--exclude-standard"))]));
+    label.push(`since ${args.since}`);
+  }
+  // Both filters keep only the files in both sets.
+  const scope = sets.length ? new Set([...sets[0]].filter((f) => sets.every((s) => s.has(f)))) : null;
+  return { scope, label: label.join(", ") || "all" };
 }
 
 /** @param {string[]} argv */
 export function parseArgs(argv) {
-  /** @type {{ summary: boolean, file?: string, since?: string, first: number }} */
-  const args = { summary: false, first: 20 };
+  /** @type {{ summary: boolean, file?: string, since?: string, first: number, scopeVerdict: boolean }} */
+  const args = { summary: false, first: 20, scopeVerdict: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const value = () => {
@@ -119,12 +168,14 @@ export function parseArgs(argv) {
     if (a === "--summary") args.summary = true;
     else if (a === "--file") args.file = value();
     else if (a === "--since") args.since = value();
+    else if (a === "--scope-verdict") args.scopeVerdict = true;
     else if (a === "--first") {
       args.first = Number(value());
       if (!Number.isInteger(args.first) || args.first < 0) throw new Error("--first needs a whole number");
     } else throw new Error(`unknown argument ${a}`);
   }
-  if (!args.summary && (args.file || args.since || argv.includes("--first"))) throw new Error("--file, --since and --first need --summary");
+  if (!args.summary && (args.file || args.since || args.scopeVerdict || argv.includes("--first"))) throw new Error("--file, --since, --scope-verdict and --first need --summary");
+  if (args.scopeVerdict && !args.file && !args.since) throw new Error("--scope-verdict needs --file or --since");
   return args;
 }
 
@@ -152,35 +203,21 @@ function main() {
     if (run.error) return usageError(`tsc did not start: ${run.error.message}`);
     process.exit(run.status === 0 ? 0 : run.status === 2 || run.status === 1 ? 1 : 2);
   }
-  const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json", "--pretty", "false"], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 28 });
+  const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json", "--pretty", "false", "--listFiles"], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 28 });
   if (run.error) return usageError(`tsc did not start: ${run.error.message}`);
   mkdirSync(join(ROOT, ".typecheck"), { recursive: true });
   writeFileSync(join(ROOT, LOG), run.stdout + run.stderr);
-  let errors = parseTsc(run.stdout);
+  const errors = parseTsc(run.stdout);
   if (run.status !== 0 && !errors.length) return usageError(`tsc exited ${run.status} with no parsed errors; read ${LOG}`);
-  const scope = [];
-  if (args.file) {
-    const want = relative(ROOT, resolve(process.env.INIT_CWD ?? process.cwd(), args.file));
-    const inRepo = want !== "" && !want.startsWith("..") && !isAbsolute(want);
-    if (!inRepo || !statSync(join(ROOT, want), { throwIfNoEntry: false })?.isFile()) return usageError(`--file ${want} is not a file in the repository`);
-    const wanted = reportedFiles([want]);
-    errors = errors.filter((e) => wanted.has(e.file));
-    scope.push(`file ${want}`);
+  let scoped;
+  try {
+    scoped = resolveScope(ROOT, args, parseListedFiles(run.stdout, ROOT), process.env.INIT_CWD ?? process.cwd());
+  } catch (err) {
+    return usageError(/** @type {Error} */ (err).message);
   }
-  if (args.since) {
-    let changed;
-    try {
-      // Changed tracked files plus new untracked ones, so a file not yet added still counts.
-      const git = (/** @type {string[]} */ ...a) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" }).split("\n").filter(Boolean);
-      changed = reportedFiles([...git("diff", "--name-only", args.since, "--"), ...git("ls-files", "--others", "--exclude-standard")]);
-    } catch {
-      return usageError(`git diff failed for ${args.since}`);
-    }
-    errors = errors.filter((e) => changed.has(e.file));
-    scope.push(`since ${args.since}`);
-  }
-  console.log(summarize(errors, { scope: scope.join(", ") || "all", first: args.first }));
-  process.exit(errors.length ? 1 : 0);
+  const { text, code } = summarize(errors, { ...scoped, scopeVerdict: args.scopeVerdict, first: args.first });
+  console.log(text);
+  process.exit(code);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) main();
