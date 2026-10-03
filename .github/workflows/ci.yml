@@ -25,6 +25,8 @@ jobs:
         run: node skill-sharpening/scripts/verify-collection.mjs
       - name: Validate eval files
         run: node skill-sharpening/evals/run.mjs check
+      - name: Test the linter
+        run: node --test skill-sharpening/scripts/verify-collection.test.mjs
 
   poteto-tools:
     name: Test Poteto Mode tools
