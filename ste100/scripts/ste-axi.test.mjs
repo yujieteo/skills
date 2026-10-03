@@ -165,6 +165,13 @@ test("a masked span in the middle of a sentence does not end the sentence", () =
   assert.equal(checkText('The tool printed "Done."\nThe test failed.', "t.md").sentences, 2);
 });
 
+test("a stray quote or backtick on one line of a paragraph does not hide the next lines", () => {
+  const text = 'The screen is 12" wide.\nThe worker is running and we don`t stop; it was utilized.\nIt has a "quoted" word.';
+  assert.deepEqual(rules(text), ["2:ing-form:running", "2:semicolon:write two sentences", "2:passive:was utilized", "2:approved-word:utilized -> use"]);
+  assert.equal(isInstruction("If it fails,\nrun the test."), true);
+  assert.deepEqual(rules("We do it in order\nto win."), ["1:approved-word:in order to -> to"]);
+});
+
 test("usage errors, empty and unreadable inputs exit 2, never a pass", () => {
   const read = () => "x";
   assert.equal(main([], read).code, 2);

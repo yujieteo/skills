@@ -121,13 +121,13 @@ export function proseUnits(source) {
     current = null;
     quoted = false;
   };
-  // orig is the source text of the unit. flush masks it once for the whole unit; masking keeps lengths, so offsets
-  // match.
+  // orig is the source text of the unit, with its lines joined by "\n". flush masks it once for the whole unit;
+  // masking keeps lengths, so offsets match.
   /** @param {string} orig @param {number} line */
   const append = (orig, line) => {
     if (!current) current = { orig: "", lines: [] };
     if (current.orig) {
-      current.orig += " ";
+      current.orig += "\n";
       current.lines.push(line);
     }
     current.orig += orig;
@@ -215,7 +215,7 @@ export function isInstruction(sentence) {
   const body = sentence.replace(/^\W+/, "");
   const first = (/** @type {string} */ s) => (/^[A-Za-z]+/.exec(s)?.[0] ?? "").toLowerCase();
   if (IMPERATIVE.has(first(body))) return true;
-  const cond = /^(?:if|when|before|after|unless|once)\b[^,]*,\s*(.*)$/i.exec(body);
+  const cond = /^(?:if|when|before|after|unless|once)\b[^,]*,\s*([\s\S]*)$/i.exec(body);
   return !!cond && IMPERATIVE.has(first(cond[1]));
 }
 
@@ -250,8 +250,8 @@ export function checkText(source, file) {
         if (/^[a-z]{2,}ing$/i.test(w) && lower.length > 4 && !ING_ALLOW.has(lower)) add("ing-form", w, m.index);
       });
       for (const [source, use] of APPROVED) {
-        for (const m of s.text.matchAll(new RegExp(`\\b(?:${source})\\b`, "gi"))) {
-          if (m.index === 0 || !/^[A-Z]/.test(m[0])) add("approved-word", `${m[0]} -> ${use}`, m.index);
+        for (const m of s.text.matchAll(new RegExp(`\\b(?:${source.replace(/ /g, "\\s+")})\\b`, "gi"))) {
+          if (m.index === 0 || !/^[A-Z]/.test(m[0])) add("approved-word", `${m[0].replace(/\s+/g, " ")} -> ${use}`, m.index);
         }
       }
       for (let k = 0; k + 1 < ws.length; k++) {
