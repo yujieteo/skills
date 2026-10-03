@@ -51,9 +51,9 @@ test("parseArgs accepts the summary flags and refuses bad usage", () => {
   assert.throws(() => parseArgs(["--bogus"]), /unknown argument/);
 });
 
-test("reportedFiles maps a page to its copied inline scripts and keeps other paths", () => {
+test("reportedFiles maps a page to its copied inline scripts, keeps other paths and errors without a location", () => {
   const page = "generate-visualization/examples/anscombe-quartet/index.html";
-  assert.deepEqual([...reportedFiles([page, "a.mjs"])], [page, ".typecheck/inline/generate-visualization-examples-anscombe-quartet-index-html.js", "a.mjs"]);
+  assert.deepEqual([...reportedFiles([page, "a.mjs"])], ["", page, ".typecheck/inline/generate-visualization-examples-anscombe-quartet-index-html.js", "a.mjs"]);
 });
 
 test("summarize points the --file hint at the top real file, never (config), and quotes odd paths", () => {

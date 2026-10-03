@@ -5,7 +5,7 @@
 // errors in tsc's order. Exit codes: 0 no errors, 1 type errors, 2 usage or environment error.
 // Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>]], where --first defaults to 20
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -23,9 +23,10 @@ export const INLINE_DIR = ".typecheck/inline/";
 /** @param {string} page */
 export const inlineFile = (page) => `${INLINE_DIR}${page.replace(/[^A-Za-z0-9]+/g, "-")}.js`;
 
-// The file names tsc reports for these repository paths: a page also stands for its copied inline scripts.
+// The file names tsc reports for these repository paths: a page also stands for its copied inline scripts, and
+// the empty name of errors without a location is always kept, as those fail the check for every file.
 /** @param {string[]} paths */
-export const reportedFiles = (paths) => new Set(paths.flatMap((p) => (PAGES.includes(p) ? [p, inlineFile(p)] : [p])));
+export const reportedFiles = (paths) => new Set(["", ...paths.flatMap((p) => (PAGES.includes(p) ? [p, inlineFile(p)] : [p]))]);
 
 /** @param {string} path */
 const shellArg = (path) => (/^[\w./-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`);
@@ -142,16 +143,17 @@ function main() {
     return usageError(/** @type {Error} */ (err).message);
   }
   const tsc = join(ROOT, "node_modules/typescript/bin/tsc");
+  if (!existsSync(tsc)) return usageError("tsc is not installed; run npm ci");
   const extract = spawnSync(process.execPath, [join(ROOT, "skill-sharpening/scripts/extract-inline.mjs"), ...PAGES], { cwd: ROOT, encoding: "utf8" });
   if (extract.status !== 0) return usageError(`extract-inline.mjs failed: ${(extract.stderr || extract.stdout).trim().split("\n")[0]}`);
   if (!args.summary) {
     process.stdout.write(extract.stdout);
     const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json"], { cwd: ROOT, stdio: "inherit" });
-    if (run.error) return usageError(`tsc did not start: ${run.error.message}; run npm ci`);
+    if (run.error) return usageError(`tsc did not start: ${run.error.message}`);
     process.exit(run.status === 0 ? 0 : run.status === 2 || run.status === 1 ? 1 : 2);
   }
   const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json", "--pretty", "false"], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 28 });
-  if (run.error || run.stderr.includes("Cannot find module")) return usageError(`tsc did not start: ${run.error?.message ?? run.stderr.trim().split("\n")[0]}; run npm ci`);
+  if (run.error) return usageError(`tsc did not start: ${run.error.message}`);
   mkdirSync(join(ROOT, ".typecheck"), { recursive: true });
   writeFileSync(join(ROOT, LOG), run.stdout + run.stderr);
   let errors = parseTsc(run.stdout);
