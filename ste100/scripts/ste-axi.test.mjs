@@ -155,6 +155,13 @@ test("a ., ! or ? at the end of quoted text, inline code or a URL ends the sente
   assert.deepEqual(rules('The user said "it\'s running; don\'t stop." The test failed.'), []);
 });
 
+test("a masked span in the middle of a sentence does not end the sentence", () => {
+  const texts = ["A name has a digit, `_`, `/` or `.` in it.", "Use the `...` operator in the call.", 'The prompt asks "Continue?" before it deletes the file.'];
+  for (const t of texts) assert.equal(checkText(t, "t.md").sentences, 1, t);
+  const long = 'The tool printed "Done." before the report ' + "has one word ".repeat(5) + "and it ends here.";
+  assert.deepEqual(rules(long), ["1:long-descriptive:26 words, max 25"]);
+});
+
 test("usage errors, empty and unreadable inputs exit 2, never a pass", () => {
   const read = () => "x";
   assert.equal(main([], read).code, 2);

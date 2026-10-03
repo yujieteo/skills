@@ -77,14 +77,14 @@ const CONTRACTION = /\b(?:\w+n['’]t|(?:it|that|there|here|what|who|let|he|she|
 /** @typedef {{ text: string, orig: string, lines: number[] }} Unit */
 
 // Replaces every character of a match with spaces except one marker, so offsets keep their lines. A final ., ! or ?
-// of the match stays, so that it can end the sentence.
+// after a letter or digit stays when a capital letter or the end of the line comes next, so that it ends the sentence.
 /** @param {string} s @param {RegExp} re */
 const mask = (s, re) =>
-  s.replace(re, (m) => {
-    const end = /[.!?]+(?=["”`]?$)/.exec(m.slice(1));
-    const cut = end ? end.index + 1 : m.length;
-    const kept = end ? end[0] + " ".repeat(m.length - cut - end[0].length) : "";
-    return "X" + m.slice(1, cut).replace(/[^\n]/g, " ") + kept;
+  s.replace(re, (m, /** @type {number} */ at, /** @type {string} */ all) => {
+    const end = /[A-Za-z0-9]([.!?]+)["”`]?$/.exec(m);
+    const keep = end && end.index > 0 && /^\s*(?:[A-Z]|$)/.test(all.slice(at + m.length)) ? end[1] : "";
+    const cut = end && keep ? end.index + 1 : m.length;
+    return "X" + m.slice(1, cut).replace(/[^\n]/g, " ") + keep + " ".repeat(m.length - cut - keep.length);
   });
 
 // Masks what the check must skip: inline code, URLs, Markdown link targets, quoted text and abbreviations.
