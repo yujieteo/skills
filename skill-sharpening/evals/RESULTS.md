@@ -1,6 +1,6 @@
 # Recorded eval results
 
-Summaries of eval runs, kept so that a later run has a reference. The full replies and verdicts stay in `results/`, which git ignores. Add a section for each run that you want to keep, newest first.
+Summaries of eval runs, kept so that a later run has a reference. The full replies and verdicts stay in `results/`, which git ignores. Add a section for each run that you want to keep, newest first. The runner no longer prints calls, wall time or list price, so later runs record only the values that the runner prints: tokens and approximate cost.
 
 ## 2026-10-03: first run, on the Claude subscription
 
@@ -12,7 +12,7 @@ All runs used `--backend claude-cli`, `claude-opus-5-5` for the model and the ju
 |---|---|---|---|---|---|
 | 54 | 54 (100%) | 54 | 106 s | 475,633 / 6,710 | $0.43 |
 
-Each case expects one skill (or one of a few), or no skill. Every one of the 53 skills that a case expects loaded for its case, and the three `none` cases loaded no skill. The suite does not test the other 36 skills in the collection.
+Each case expects one skill (or one of a few), or no skill. Each of the 51 skill cases picked a skill that it accepts, and the three `none` cases picked no skill. The cases name 53 skills; the suite does not test the other 36 skills in the collection.
 
 ### Behavior cases
 

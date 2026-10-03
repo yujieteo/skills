@@ -73,7 +73,7 @@ node run.mjs triggers --backend claude-cli
 node run.mjs behavior --backend claude-cli --skill ste100 --baseline
 ```
 
-The subscription's limits are shared with every other Claude Code session on the account, such as an agent fleet. So `claude-cli` runs 2 calls at a time by default, not 4. Run one skill or `--only` while you iterate. With `claude-cli`, the approximate cost that a run prints is the API price of the same tokens; the subscription does not bill it.
+The subscription's limits are shared with every other Claude Code session on the account, such as an agent fleet. So `claude-cli` runs 2 calls at a time by default, not 4. Run one skill or `--only` while you iterate. With `claude-cli`, the approximate cost that a run prints is only a rough upper estimate: it counts all input tokens at the full input price and ignores cache pricing. The subscription does not bill it.
 
 #### Isolation
 
