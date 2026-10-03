@@ -5,8 +5,8 @@
 // errors in tsc's order. Exit codes: 0 no errors, 1 type errors, 2 usage or environment error.
 // Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>]], where --first defaults to 20
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { mkdirSync, statSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -159,7 +159,8 @@ function main() {
   const scope = [];
   if (args.file) {
     const want = relative(ROOT, resolve(process.env.INIT_CWD ?? process.cwd(), args.file));
-    if (!existsSync(join(ROOT, want))) return usageError(`--file ${want} is not a file in the repository`);
+    const inRepo = want !== "" && !want.startsWith("..") && !isAbsolute(want);
+    if (!inRepo || !statSync(join(ROOT, want), { throwIfNoEntry: false })?.isFile()) return usageError(`--file ${want} is not a file in the repository`);
     const wanted = reportedFiles([want]);
     errors = errors.filter((e) => wanted.has(e.file));
     scope.push(`file ${want}`);
