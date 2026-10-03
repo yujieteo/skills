@@ -26,7 +26,10 @@ node skill-sharpening/scripts/verify-collection.mjs
 node skill-sharpening/evals/run.mjs check                 # eval files are well formed
 node skill-sharpening/scripts/normalize-frontmatter.mjs   # rewrites in place; review the diff
 poteto-mode/scripts/setup.sh --check                      # only when you touched poteto-mode/scripts
+npm run typecheck -- --summary                            # after npm ci; when you changed JavaScript
 ```
+
+For type errors, use `npm run typecheck -- --summary` (add `--file <path>` or `--since <ref>` to narrow it). Do not pipe tsc output through `grep -c`, `sort`, or `uniq`. The summary gives the counts by code and by file and the first errors. The full log goes to `.typecheck/tsc.log`. Exit 0 is pass, 1 is type errors, and 2 is a usage or setup error.
 
 ## Adding a skill
 
