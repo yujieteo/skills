@@ -2,6 +2,8 @@
 
 These values were read from the Mac that runs firstmate on 2026-10-02, using `--version`, `brew leaves`, `npm ls -g`, and file listings. No credentials were read. Treat each version as a floor. If a newer release breaks a step, record the last version that worked here.
 
+This machine predates the flake: it was still set up with Homebrew and Stow. The "Installed by" column records how each tool got there, not how to install it now. On a new machine, the Nix flake in the private `yujieteo/dotfiles` repository installs what it declares; the tables show only versions and the tools the flake does not cover yet.
+
 Platform: macOS 26.6, Apple silicon (arm64), zsh.
 
 ## Tools
@@ -37,8 +39,8 @@ Other casks on the machine that are not part of the agent setup: `google-chrome`
 ## Configuration as found
 
 - `gh`: logged in through the keyring, with `ssh` as the Git protocol.
-- Codex: `~/.codex/skills` is a clone of `yujieteo/skills`. `~/.codex/hooks.json` runs the herdr agent-state hook and the three axi SessionStart hooks.
+- Codex: `~/.codex/skills` is an old second clone of `yujieteo/skills`. Codex now reads user skills from `~/.agents/skills`, so a new machine does not need that clone. `~/.codex/hooks.json` runs the herdr agent-state hook and the three axi SessionStart hooks.
 - Claude Code: `~/.claude/settings.json` has SessionStart hooks for `lavish-axi`, `gh-axi`, and `chrome-devtools-axi`. `~/.claude/skills` holds only the no-mistakes skill and the synced skills. The repository is not linked there.
 - herdr integrations: `codex` and `pi` are current. `claude` is not installed.
 - Firstmate: cloned from `https://github.com/kunchenguid/firstmate` into `~/src/firstmate` and started as `claude` from that directory inside herdr. No `config/backend` file, because herdr is detected from `HERDR_ENV=1`.
-- Dotfiles: `yujieteo/dotfiles` cloned into `~/src/dotfiles` and applied with Stow.
+- Dotfiles: an old Stow checkout of `yujieteo/dotfiles`. The repository is private and now holds a Nix flake that must be cloned to `~/dotfiles`; a new machine does not need Stow.
