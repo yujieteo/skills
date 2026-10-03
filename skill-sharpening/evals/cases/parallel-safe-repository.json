@@ -1,0 +1,24 @@
+{
+  "skill": "parallel-safe-repository",
+  "cases": [
+    {
+      "id": "psr-shared-index",
+      "prompt": "Every PR that adds a new visual also appends an entry to visuals/index.json, and our agents' PRs keep hitting merge conflicts on that file. How should we fix this?",
+      "assertions": [
+        "The reply proposes generating the index from metadata kept in each visual's own folder.",
+        "The reply says the generated index should not be committed, or that nobody edits it by hand.",
+        "The reply does not rely on serializing the merges, a merge queue, or telling agents to rebase as the main fix."
+      ]
+    },
+    {
+      "id": "psr-ci-selection",
+      "prompt": "Our monorepo has 40 services and CI runs every service's test suite on every PR, even a README typo fix. Agents open around 30 PRs a day. What should change?",
+      "assertions": [
+        "The reply proposes a script or rule that maps the changed paths to the services they select.",
+        "The reply says a documentation-only change selects no service tests.",
+        "The reply says a change to shared tooling selects all services.",
+        "The reply runs each selected service in its own job."
+      ]
+    }
+  ]
+}

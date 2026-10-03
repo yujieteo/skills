@@ -29,6 +29,8 @@ jobs:
         run: node --test skill-sharpening/scripts/verify-collection.test.mjs
       - name: Test the type-check summary
         run: node --test skill-sharpening/scripts/typecheck.test.mjs
+      - name: Test the eval runner's claude-cli backend
+        run: node --test skill-sharpening/evals/claude-cli.test.mjs
 
   typecheck:
     name: Type-check JavaScript

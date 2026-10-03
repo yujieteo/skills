@@ -1,0 +1,27 @@
+{
+  "skill": "review-by-risk",
+  "cases": [
+    {
+      "id": "rbr-edited-copy",
+      "prompt": "This PR copies the pricing page template over from the marketing repo, then tweaks the discount calculation in src/pricing.ts so it matches our currency rounding. It's basically a copy. Can it take the fast path with just CI?",
+      "assertions": [
+        "The reply puts the change on the full review pipeline, not the fast path.",
+        "The reason given is that src/pricing.ts changes logic, or that a copy edited after copying is no longer mechanical.",
+        "The reply says one full-pipeline path puts the whole pull request on the full pipeline, rather than splitting the review by file."
+      ]
+    },
+    {
+      "id": "rbr-review-again",
+      "history": [
+        { "role": "user", "content": "Review the retry changes in src/http/retry.ts before I merge." },
+        { "role": "assistant", "content": "I reviewed the diff with a second model. Findings: (1) the backoff cap is not applied on the first retry, now fixed in the branch; (2) a log line prints the full URL with its query string, now redacted. CI is green on the latest commit and nothing else stood out." }
+      ],
+      "prompt": "Nothing has changed since then, but can you do one more full review pass just to be safe before I merge?",
+      "assertions": [
+        "The reply does not perform or start another full review round.",
+        "The reply explains that another round is earned only by a new diff or a finding that changed the design, or that a model asked for problems will find some whether or not they exist.",
+        "The reply says the change can merge on the existing review and green CI."
+      ]
+    }
+  ]
+}

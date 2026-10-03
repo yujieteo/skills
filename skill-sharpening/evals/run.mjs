@@ -5,11 +5,15 @@
 //   node run.mjs check                 validate the eval files (offline, free)
 //   node run.mjs triggers              does each request pick the right skill?
 //   node run.mjs behavior [--baseline] does a loaded skill change the answer as intended?
+//
+// --backend api (the default) calls the Anthropic API with ANTHROPIC_API_KEY. --backend claude-cli runs each call
+// through the local `claude -p`, billed to the Claude subscription it is logged in to; see claude-cli.mjs.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadSkills } from "../scripts/lib/skills.mjs";
+import { flatten, runClaude } from "./claude-cli.mjs";
 
 /** @import { Skill } from "../scripts/lib/skills.mjs" */
 /** @import { default as AnthropicClient } from "@anthropic-ai/sdk" */
@@ -21,6 +25,7 @@ import { loadSkills } from "../scripts/lib/skills.mjs";
 /** @typedef {{ file: string, skill: string, cases: BehaviorCase[] }} BehaviorSuite */
 /** @typedef {{ system: string, messages: MessageParam[] }} Prompt */
 /** @typedef {NonNullable<NonNullable<MessageCreateParamsNonStreaming["output_config"]>["effort"]>} Effort */
+/** @typedef {import("./claude-cli.mjs").Usage} Usage */
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repository = resolve(here, "..", "..");
@@ -34,12 +39,13 @@ const skillNames = new Set(skills.map((skill) => skill.dirName));
 
 /** @param {string[]} list */
 function parseOptions(list) {
-  /** @type {{ model: string, judgeModel: string, effort: Effort | undefined, concurrency: number, runs: number, baseline: boolean, skill: string | undefined, only: string | undefined }} */
+  /** @type {{ backend: "api" | "claude-cli", model: string, judgeModel: string, effort: Effort | undefined, concurrency: number, runs: number, baseline: boolean, skill: string | undefined, only: string | undefined }} */
   const parsed = {
+    backend: "api",
     model: "claude-opus-5-5",
     judgeModel: "claude-opus-5-5",
     effort: undefined,
-    concurrency: 4,
+    concurrency: 0,
     runs: 1,
     baseline: false,
     skill: undefined,
@@ -48,7 +54,11 @@ function parseOptions(list) {
   for (let index = 0; index < list.length; index++) {
     const flag = list[index];
     const value = () => list[++index];
-    if (flag === "--model") parsed.model = value();
+    if (flag === "--backend") {
+      const backend = value();
+      if (backend !== "api" && backend !== "claude-cli") throw new Error(`--backend must be api or claude-cli, not ${backend}`);
+      parsed.backend = backend;
+    } else if (flag === "--model") parsed.model = value();
     else if (flag === "--judge-model") parsed.judgeModel = value();
     // Passed through as given; the API rejects a level it does not know.
     else if (flag === "--effort") parsed.effort = /** @type {Effort} */ (value());
@@ -59,6 +69,8 @@ function parseOptions(list) {
     else if (flag === "--only") parsed.only = value();
     else throw new Error(`unknown option ${flag}`);
   }
+  // The claude-cli backend shares the subscription's limits with every other Claude Code session, so it goes slower.
+  parsed.concurrency ||= parsed.backend === "claude-cli" ? 2 : 4;
   return parsed;
 }
 
@@ -128,10 +140,11 @@ function check() {
 
 // ---------- model calls ----------
 
-// Loaded by setup(), only for the paid evals: `check` runs without the SDK installed.
+// Loaded by setup(), only for the model evals: `check` runs without the SDK installed, and the claude-cli backend
+// needs only zod.
 /** @type {AnthropicClient} */
 let client;
-/** @type {typeof AnthropicClient} */
+/** @type {typeof AnthropicClient | undefined} */
 let Anthropic;
 /** @type {typeof import("zod").z} */
 let z;
@@ -141,17 +154,26 @@ let zodOutputFormat;
 const usage = {};
 
 async function setup() {
-  ({ default: Anthropic } = await import("@anthropic-ai/sdk"));
   ({ z } = await import("zod"));
+  if (options.backend === "claude-cli") return;
+  ({ default: Anthropic } = await import("@anthropic-ai/sdk"));
   ({ zodOutputFormat } = await import("@anthropic-ai/sdk/helpers/zod"));
   client = new Anthropic({ maxRetries: 4 });
 }
 
-/** @param {string} model @param {{ usage: AnthropicClient.Usage }} response */
+/** @param {string} model @param {{ usage: Usage | null }} response */
 function track(model, response) {
   const entry = (usage[model] ??= { input: 0, output: 0 });
+  if (!response.usage) return;
   entry.input += response.usage.input_tokens + (response.usage.cache_read_input_tokens ?? 0) + (response.usage.cache_creation_input_tokens ?? 0);
   entry.output += response.usage.output_tokens;
+}
+
+/** @param {string} model @param {Prompt} fields @param {object} [schema] */
+async function askCli(model, { system, messages }, schema) {
+  const result = await runClaude({ model, system, schema, effort: options.effort, prompt: flatten(/** @type {Turn[]} */ (messages)) });
+  track(model, result);
+  return result;
 }
 
 /** @param {string} model @param {Prompt & { output_config?: MessageCreateParamsNonStreaming["output_config"] }} fields */
@@ -164,6 +186,7 @@ function request(model, fields) {
 
 /** @param {string} model @param {Prompt} fields */
 async function ask(model, fields) {
+  if (options.backend === "claude-cli") return (await askCli(model, fields)).text;
   const response = await client.messages.create(request(model, fields));
   track(model, response);
   if (response.stop_reason === "refusal") throw new Error(`model refused (${response.stop_details?.category ?? "no category"})`);
@@ -176,6 +199,13 @@ async function ask(model, fields) {
  * @returns {Promise<import("zod").infer<S>>}
  */
 async function askStructured(model, fields, schema) {
+  if (options.backend === "claude-cli") {
+    // The CLI's schema validator does not know the draft 2020-12 meta-schema that zod names, so leave the name out.
+    const { $schema, ...json } = z.toJSONSchema(schema);
+    const result = await askCli(model, fields, json);
+    if (result.structured === undefined) throw new Error("no structured output");
+    return schema.parse(result.structured);
+  }
   const response = await client.messages.parse(request(model, { ...fields, output_config: { format: zodOutputFormat(schema) } }));
   track(model, response);
   if (response.stop_reason === "refusal") throw new Error(`model refused (${response.stop_details?.category ?? "no category"})`);
@@ -200,7 +230,7 @@ async function pool(items, worker) {
         // A worker's result never has an error field; only a failure does.
         results[index] = /** @type {R & { error?: undefined }} */ (await worker(items[index]));
       } catch (failure) {
-        results[index] = { error: failure instanceof Anthropic.APIError ? `${failure.status} ${failure.message}` : String(/** @type {Error} */ (failure).message ?? failure) };
+        results[index] = { error: Anthropic && failure instanceof Anthropic.APIError ? `${failure.status} ${failure.message}` : String(/** @type {Error} */ (failure).message ?? failure) };
       }
       process.stderr.write(".");
     }
@@ -363,11 +393,12 @@ async function behavior() {
 /** @type {Record<string, () => void | Promise<void>>} */
 const commands = { check, triggers, behavior };
 if (!commands[command]) {
-  console.error("usage: node run.mjs <check|triggers|behavior> [--model M] [--judge-model M] [--effort low|medium|high]");
-  console.error("       [--concurrency N] [--runs N] [--only ID] [--skill NAME] [--baseline]");
+  console.error("usage: node run.mjs <check|triggers|behavior> [--backend api|claude-cli] [--model M] [--judge-model M]");
+  console.error("       [--effort low|medium|high|xhigh|max] [--concurrency N] [--runs N] [--only ID] [--skill NAME] [--baseline]");
   process.exit(2);
 }
-if (command !== "check" && !existsSync(join(here, "node_modules", "@anthropic-ai", "sdk"))) {
+const needed = options.backend === "claude-cli" ? join("node_modules", "zod") : join("node_modules", "@anthropic-ai", "sdk");
+if (command !== "check" && !existsSync(join(here, needed))) {
   console.error("run `npm ci` in skill-sharpening/evals first");
   process.exit(2);
 }

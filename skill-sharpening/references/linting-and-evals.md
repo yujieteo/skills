@@ -6,7 +6,7 @@ This collection has two kinds of checks. They answer different questions.
 |---|---|---|
 | Question | Is each skill well formed? | Does each skill work when a model uses it? |
 | How | Reads files and checks rules | Sends prompts to Claude and grades the replies |
-| Cost | Free, about 1 second | Paid API calls, a few minutes |
+| Cost | Free, about 1 second | API calls or Claude subscription use, a few minutes |
 | Result | The same every run | Varies a little between runs |
 | When | Every commit, and in CI on every PR | After you change a skill's description or instructions |
 
@@ -50,13 +50,42 @@ The frontmatter parser understands folded (`>-`) and literal (`|`) descriptions.
 
 ## Evals
 
-The evals live in [`../evals/`](../evals/). They need Node 22, an Anthropic API key, and a one-time install:
+The evals live in [`../evals/`](../evals/). They need Node 22 and a one-time install:
 
 ```sh
 cd skill-sharpening/evals
 npm ci
-export ANTHROPIC_API_KEY=...        # or run `ant auth login` once
 ```
+
+### Choose a backend
+
+The runner sends each model call through one of two backends. Every eval command takes `--backend`.
+
+| Backend | How each call runs | Who pays | Needs |
+|---|---|---|---|
+| `api` (default) | The Anthropic API, through `@anthropic-ai/sdk` | API usage, at list price | `ANTHROPIC_API_KEY`, or `ant auth login` once |
+| `claude-cli` | One headless `claude -p` run | The Claude subscription that Claude Code is logged in to | The `claude` CLI on `PATH`, logged in to a subscription |
+
+To run the evals on a subscription, use `claude-cli`. It never reads or needs an API key: it removes `ANTHROPIC_*` variables from each call's environment, so a key in your shell cannot move the bill to the API.
+
+```sh
+node run.mjs triggers --backend claude-cli
+node run.mjs behavior --backend claude-cli --skill ste100 --baseline
+```
+
+The subscription's limits are shared with every other Claude Code session on the account, such as an agent fleet. So `claude-cli` runs 2 calls at a time by default, not 4. Run one skill or `--only` while you iterate. With `claude-cli`, the approximate cost that a run prints is only a rough upper estimate: it counts all input tokens at the full input price and ignores cache pricing. The subscription does not bill it.
+
+#### Isolation
+
+The CLI normally loads your `CLAUDE.md`, skills, plugins, settings, hooks and MCP servers. Then a "with skill" run would also see your other skills and rules, and the baseline would not be a baseline. So each `claude-cli` call:
+
+- runs in a new empty temporary directory, which it deletes after the call;
+- passes `--safe-mode` (no `CLAUDE.md`, skills, plugins, hooks or custom agents), `--setting-sources ""` (no settings files), `--strict-mcp-config` (no MCP servers), `--disable-slash-commands`, `--tools ""` (no tools) and `--no-session-persistence` (no saved transcript);
+- replaces the whole system prompt with the runner's prompt (`--system-prompt`), and gets its JSON answers through `--json-schema`.
+
+The only difference between a with-skill run and a baseline run is the skill text in the system prompt. Login still works, because `--safe-mode` keeps authentication.
+
+[`claude-cli.test.mjs`](../evals/claude-cli.test.mjs) tests the flags, environment and directory of each call offline, with a fake `claude`, and CI runs it.
 
 ### Check the eval files (free)
 
@@ -104,7 +133,8 @@ The candidate model cannot run tools during a behavior eval. Write cases for wha
 | `--runs N` | 1 | Repeat each case N times to measure variance |
 | `--only ID` | all | Run only cases whose id contains ID |
 | `--skill NAME` | all | Behavior evals for one skill |
-| `--concurrency N` | 4 | Parallel requests |
+| `--backend` | `api` | `api` or `claude-cli`; see [Choose a backend](#choose-a-backend) |
+| `--concurrency N` | 4 for `api`, 2 for `claude-cli` | Parallel requests |
 
 Each run prints token counts and an approximate cost, and saves the full replies and verdicts to `evals/results/` (gitignored). The trigger suite makes one request per case. The behavior suite makes two per case (reply and judge), and twice that with `--baseline`. Run one skill or `--only` while you iterate.
 
@@ -142,6 +172,10 @@ Good cases:
 
 Run `node run.mjs check` after every edit.
 
+### Record a run
+
+[`RESULTS.md`](../evals/RESULTS.md) keeps a summary of each run that you want to keep: pass or fail for each skill or case, tokens and cost. Copy the numbers from the run's output. Do not copy replies or verdicts, which can hold private data; they stay in the gitignored `results/` folder.
+
 ## In CI
 
-The `CI` workflow runs the linter and `run.mjs check` on every push and PR. The `Evals` workflow runs the paid evals only when started by hand from the Actions tab, and only when the repository has an `ANTHROPIC_API_KEY` secret. It uploads the results as a build artifact.
+The `CI` workflow runs the linter and `run.mjs check` on every push and PR. The `Evals` workflow runs the paid evals only when started by hand from the Actions tab, and only when the repository has an `ANTHROPIC_API_KEY` secret. It uses the `api` backend and uploads the results as a build artifact. The `claude-cli` backend runs only on a machine where Claude Code is logged in to a subscription, not in CI.
