@@ -79,6 +79,7 @@ Pick the row that matches the task, load only that skill, and let it load its ow
 |---|---|
 | Any prose, cut AI tells | `unslop` |
 | Docs, READMEs, PR bodies, commit messages | `technical-writing` |
+| All human-facing prose in ASD-STE100 Simplified Technical English | `ste100` |
 | Skills, `AGENTS.md`, `CLAUDE.md` | `writing-for-agents` |
 
 ## Generate and publish (owner's site and notes)
