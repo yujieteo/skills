@@ -69,12 +69,11 @@ The runner sends each model call through one of two backends. Every eval command
 To run the evals on a subscription, use `claude-cli`. It never reads or needs an API key: it removes `ANTHROPIC_*` variables from each call's environment, so a key in your shell cannot move the bill to the API.
 
 ```sh
-node run.mjs isolation --backend claude-cli           # first, prove each call is isolated (2 calls)
 node run.mjs triggers --backend claude-cli
 node run.mjs behavior --backend claude-cli --skill ste100 --baseline
 ```
 
-The subscription's limits are shared with every other Claude Code session on the account, such as an agent fleet. So `claude-cli` runs 2 calls at a time by default, not 4, and every command prints its call count before it starts. Run one skill or `--only` while you iterate. Each result reports the API list price of the same tokens, for comparison; the subscription does not bill it.
+The subscription's limits are shared with every other Claude Code session on the account, such as an agent fleet. So `claude-cli` runs 2 calls at a time by default, not 4. Run one skill or `--only` while you iterate. With `claude-cli`, the approximate cost that a run prints is the API price of the same tokens; the subscription does not bill it.
 
 #### Isolation
 
@@ -86,7 +85,7 @@ The CLI normally loads your `CLAUDE.md`, skills, plugins, settings, hooks and MC
 
 The only difference between a with-skill run and a baseline run is the skill text in the system prompt. Login still works, because `--safe-mode` keeps authentication.
 
-`node run.mjs isolation --backend claude-cli` proves this with two real calls. It plants a `CLAUDE.md`, a project skill and project hooks in a directory, each with a marker, and runs a with-skill call and a baseline call from there. Each call lists every marker and skill it can see. The check passes when the with-skill call sees only the probe skill's marker, the baseline sees nothing, and no hook ran. `--control` runs the same probe with the project's files loaded on purpose. It must fail, which shows that the check can find a leak. [`claude-cli.test.mjs`](../evals/claude-cli.test.mjs) tests the flags, environment and directory of each call offline, with a fake `claude`, and CI runs it.
+[`claude-cli.test.mjs`](../evals/claude-cli.test.mjs) tests the flags, environment and directory of each call offline, with a fake `claude`, and CI runs it.
 
 ### Check the eval files (free)
 
@@ -137,7 +136,7 @@ The candidate model cannot run tools during a behavior eval. Write cases for wha
 | `--backend` | `api` | `api` or `claude-cli`; see [Choose a backend](#choose-a-backend) |
 | `--concurrency N` | 4 for `api`, 2 for `claude-cli` | Parallel requests |
 
-Each run prints the call count before it starts. At the end it prints token counts, calls, wall time and an approximate cost, and saves the full replies and verdicts to `evals/results/` (gitignored). The trigger suite makes one request per case. The behavior suite makes two per case (reply and judge), and twice that with `--baseline`. Run one skill or `--only` while you iterate.
+Each run prints token counts and an approximate cost, and saves the full replies and verdicts to `evals/results/` (gitignored). The trigger suite makes one request per case. The behavior suite makes two per case (reply and judge), and twice that with `--baseline`. Run one skill or `--only` while you iterate.
 
 A model refusal counts as a failed case. The runner does not fall back to another model, so every result comes from the model you named.
 
@@ -175,7 +174,7 @@ Run `node run.mjs check` after every edit.
 
 ### Record a run
 
-[`RESULTS.md`](../evals/RESULTS.md) keeps a summary of each run that you want to keep: pass or fail for each skill or case, calls, wall time and cost. Copy the numbers from the run's output. Do not copy replies or verdicts, which can hold private data; they stay in the gitignored `results/` folder.
+[`RESULTS.md`](../evals/RESULTS.md) keeps a summary of each run that you want to keep: pass or fail for each skill or case, tokens and cost. Copy the numbers from the run's output. Do not copy replies or verdicts, which can hold private data; they stay in the gitignored `results/` folder.
 
 ## In CI
 
