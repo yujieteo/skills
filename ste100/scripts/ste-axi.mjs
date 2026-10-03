@@ -93,7 +93,7 @@ export function maskSkipped(s) {
 
 // Splits Markdown or plain text into prose units with the line of each character. Skips front matter, fenced code,
 // indented code, HTML lines and table separators. A paragraph is one unit; a heading, a list item or a table cell
-// starts a new unit.
+// starts a new unit. Lines of one quoted paragraph are one unit, and an indented paragraph in a list item is prose.
 /** @param {string} source @returns {Unit[]} */
 export function proseUnits(source) {
   const lines = source.split(/\r?\n/);
@@ -102,6 +102,8 @@ export function proseUnits(source) {
   /** @type {Unit | null} */
   let current = null;
   let fence = "";
+  let quoted = false;
+  let list = false;
   let i = 0;
   if (lines[0] === "---") {
     const end = lines.indexOf("---", 1);
@@ -110,6 +112,7 @@ export function proseUnits(source) {
   const flush = () => {
     if (current && current.text.trim()) units.push(current);
     current = null;
+    quoted = false;
   };
   // text is the masked line, orig the same span of the source; masking keeps lengths, so offsets match.
   /** @param {string} text @param {string} orig @param {number} line */
@@ -132,12 +135,13 @@ export function proseUnits(source) {
       if (open && open[1][0] === fence[0] && open[1].length >= fence.length) fence = "";
       continue;
     }
+    if (raw.trim() && !/^\s/.test(raw)) list = false;
     if (open) {
       flush();
       fence = open[1];
       continue;
     }
-    if (!raw.trim() || /^( {4}|\t)/.test(raw) && !current || /^\s*</.test(raw) || /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(raw)) {
+    if (!raw.trim() || /^( {4}|\t)/.test(raw) && !current && !list || /^\s*</.test(raw) || /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(raw)) {
       flush();
       continue;
     }
@@ -153,9 +157,16 @@ export function proseUnits(source) {
     }
     const block = /^\s*(?:#{1,6}\s+|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+|>\s*)/.exec(text);
     if (block) {
-      flush();
+      const quote = block[0].trim().startsWith(">");
+      if (!(quote && quoted)) flush();
+      if (quote && !text.slice(block[0].length).trim()) {
+        flush();
+        continue;
+      }
+      if (/^[-*+\d]/.test(block[0].trim())) list = true;
       const pad = " ".repeat(block[0].length);
       append(pad + text.slice(block[0].length), pad + raw.slice(block[0].length), line);
+      quoted = quote;
       if (/^\s*#/.test(raw)) flush();
       continue;
     }
@@ -167,12 +178,12 @@ export function proseUnits(source) {
 
 /** @typedef {{ text: string, start: number }} Sentence */
 
-// Splits a unit into sentences at ., ! or ? before a space or the end.
+// Splits a unit into sentences at ., ! or ? before a space or the end. A ., ! or ? in a word stays in its sentence.
 /** @param {string} text @returns {Sentence[]} */
 export function sentences(text) {
   /** @type {Sentence[]} */
   const out = [];
-  const re = /[^.!?]+(?:[.!?]+(?=\s|$)|$)|[.!?]+/g;
+  const re = /(?:[^.!?]|[.!?](?!\s|$))+(?:[.!?]+(?=\s|$))?|[.!?]+/g;
   let m;
   while ((m = re.exec(text))) {
     if (!m[0]) break;
@@ -299,7 +310,7 @@ export function report(results, { json = false } = {}) {
   }
   lines.push("totals:", `  inputs: ${results.length}`, `  sentences: ${sentenceCount}`, `  findings: ${findings.length}`);
   if (findings.length) {
-    lines.push(...table("help", ["hint"], [["Fix only the flagged lines, then run `ste-axi check` again"], ["A finding can be a false alarm: see Known limits in ste100/SKILL.md"]]));
+    lines.push(...table("help", ["hint"], [["Fix only the flagged lines, then run `ste-axi check` again"], ["A finding can be a false alarm: see Known limits in SKILL.md of the ste100 skill"]]));
   }
   return { text: lines.join("\n"), code };
 }

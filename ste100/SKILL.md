@@ -79,11 +79,14 @@ If an answer is "no", rewrite that part before you send it.
 
 ## Run the checker
 
-Before you send prose, run the deterministic checker on it:
+Before you send prose, run the deterministic checker on it.
+The checker is `scripts/ste-axi.mjs` in the directory of this skill.
+Use the absolute path of the installed skill, so that the command works from all repositories:
 
 ```sh
-node ste100/scripts/ste-axi.mjs check reply.md
-printf '%s\n' "$TEXT" | node ste100/scripts/ste-axi.mjs check -
+STE_AXI=~/.claude/skills/ste100/scripts/ste-axi.mjs  # the scripts/ste-axi.mjs file of this skill
+node "$STE_AXI" check reply.md
+printf '%s\n' "$TEXT" | node "$STE_AXI" check -
 ```
 
 The script uses Node only and no network.

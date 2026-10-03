@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -80,6 +81,31 @@ test("skips technical names with capitals, digits, dots or underscores", () => {
   assert.deepEqual(rules("The JSONParsing tool and v2ing and file.ing and set_ing pass."), []);
 });
 
+test("a dot, ! or ? in a word does not hide the words before it", () => {
+  assert.deepEqual(rules("The worker is running and we don't stop; the package.json file was changed."), [
+    "1:ing-form:running",
+    "1:contraction:don't",
+    "1:semicolon:write two sentences",
+    "1:passive:was changed",
+  ]);
+  const long = "Version 1.2 of the tool " + "has one more word ".repeat(5) + "and it ends here.";
+  assert.deepEqual(rules(long), ["1:long-descriptive:29 words, max 25"]);
+  assert.deepEqual(rules("See Node.js docs.\nThe worker is running."), ["2:ing-form:running"]);
+});
+
+test("the lines of one quoted paragraph are one unit, and an empty quote line ends it", () => {
+  const long = "The report " + "has one more word ".repeat(6) + "and it ends here.";
+  const half = long.split(" ").slice(0, 12).join(" ");
+  const rest = long.split(" ").slice(12).join(" ");
+  assert.deepEqual(rules(`> ${half}\n> ${rest}\n`), ["1:long-descriptive:30 words, max 25"]);
+  assert.deepEqual(rules(`> ${half}.\n>\n> ${rest}\n`), []);
+});
+
+test("an indented paragraph in a list item is prose, indented code after a paragraph is not", () => {
+  assert.deepEqual(rules("- Run the test.\n\n    The worker is running.\n"), ["3:ing-form:running"]);
+  assert.deepEqual(rules("The test failed.\n\n    it's running\n"), []);
+});
+
 test("reports the line of the word in a paragraph that spans lines", () => {
   const f = checkText("The first line is fine and\nthe worker is running.\n", "t.md").findings;
   assert.deepEqual(f.map((x) => [x.line, x.rule]), [[2, "ing-form"]]);
@@ -117,6 +143,13 @@ test("usage errors, empty and unreadable inputs exit 2, never a pass", () => {
   });
   assert.equal(missing.code, 2);
   assert.match(missing.text, /cannot read a\.md/);
+});
+
+test("the command line runs from a directory outside the skill", () => {
+  const run = spawnSync(process.execPath, [SCRIPT, "check", "-"], { cwd: tmpdir(), input: "It's late.\n", encoding: "utf8" });
+  assert.equal(run.status, 1);
+  assert.match(run.stdout, /"stdin:1",contraction/);
+  assert.doesNotMatch(run.stdout, /ste100\//);
 });
 
 test("the command line reads standard input for -", () => {
