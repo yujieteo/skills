@@ -31,6 +31,8 @@ jobs:
         run: node --test skill-sharpening/scripts/typecheck.test.mjs
       - name: Test the eval runner's claude-cli backend
         run: node --test skill-sharpening/evals/claude-cli.test.mjs
+      - name: Test the STE checker
+        run: node --test ste100/scripts/ste-axi.test.mjs
 
   typecheck:
     name: Type-check JavaScript
