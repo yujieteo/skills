@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -111,6 +111,12 @@ test("resolveScope refuses a missing path, a directory, and a file tsc does not 
   assert.throws(() => resolveScope(root, { file: "../outside.mjs" }, checked), /no such file/);
   assert.throws(() => resolveScope(root, { file: "notes.txt" }, checked), /tsc does not check this file/);
   assert.deepEqual(resolveScope(root, { file: "a.mjs" }, checked).label, "file a.mjs");
+  // An absolute path through a symlinked parent (macOS /var, /tmp) names the same file.
+  const linkDir = mkdtempSync(join(tmpdir(), "typecheck-link-"));
+  roots.push(linkDir);
+  const link = join(linkDir, "repo");
+  symlinkSync(root, link);
+  assert.deepEqual(resolveScope(realpathSync(root), { file: join(link, "a.mjs") }, checked).label, "file a.mjs");
 });
 
 test("resolveScope refuses an unknown ref", () => {

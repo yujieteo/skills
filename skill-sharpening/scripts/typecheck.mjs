@@ -6,7 +6,7 @@
 // Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--scope-verdict] [--first <n>]], where --first defaults to 20.
 // --file and --since only narrow the listed errors; the verdict and exit code follow all errors unless --scope-verdict.
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -129,7 +129,9 @@ export function resolveScope(root, args, checked, cwd = root) {
   const sets = [];
   const label = [];
   if (args.file) {
-    const want = relative(root, resolve(cwd, args.file));
+    // Both sides through realpath, so an absolute path through a symlink (macOS /var, /tmp) still names its file.
+    const real = (/** @type {string} */ p) => (existsSync(p) ? realpathSync(p) : p);
+    const want = relative(real(root), real(resolve(cwd, args.file)));
     const inRepo = want !== "" && !want.startsWith("..") && !isAbsolute(want);
     if (!inRepo || !statSync(join(root, want), { throwIfNoEntry: false })?.isFile()) throw new Error(`--file ${args.file}: no such file in the repository`);
     const names = reportedFiles([want]);
