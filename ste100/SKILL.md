@@ -77,6 +77,54 @@ Before you send prose, read it once against these questions:
 
 If an answer is "no", rewrite that part before you send it.
 
+## Run the checker
+
+Before you send prose, run the deterministic checker on it.
+The checker is `scripts/ste-axi.mjs` in the directory of this skill.
+Use the absolute path of the installed skill, so that the command works from all repositories:
+
+```sh
+STE_AXI=~/.claude/skills/ste100/scripts/ste-axi.mjs  # the scripts/ste-axi.mjs file of this skill
+node "$STE_AXI" check reply.md
+printf '%s\n' "$TEXT" | node "$STE_AXI" check -
+```
+
+The script uses Node only and no network.
+It prints a short TOON report: the findings first, each with `file:line`, then the counts by rule.
+The exit code is 0 for no findings and 1 for findings.
+The exit code is 2 for a usage error, a file that it cannot read, or an input with no prose.
+
+Fix only the flagged lines, then run the check again.
+Do not read the full text again for the rules that the checker covers.
+
+| Rule | Flags |
+| --- | --- |
+| `long-descriptive` | A descriptive sentence of more than 25 words |
+| `long-instruction` | An instruction of more than 20 words |
+| `ing-form` | A word that ends in -ing, except an allowed noun |
+| `contraction` | A short form such as `don't` or `it's` |
+| `semicolon` | A semicolon in prose |
+| `passive` | A form of "be" with a past participle |
+| `noun-cluster` | More than 3 nouns in a row |
+| `approved-word` | A word from the approved-word table, with the STE word to use |
+
+The checker does not check these parts of a text:
+
+- Front matter, fenced code, indented code and HTML lines.
+- Inline code, URLs, link targets, quoted text and the abbreviations `e.g.`, `i.e.`, `etc.`, `vs.` and `cf.`.
+- Technical names. A technical name has a capital letter after the first letter, a digit, `_`, `/` or `.` in it.
+- Capitalized words in the middle of a sentence.
+
+### Known limits
+
+The checker uses word patterns, not grammar, so it gives false alarms and misses some errors.
+
+1. An instruction is a sentence that starts with a verb from a fixed list, also after a condition. Other instructions get the limit of 25 words.
+2. The passive rule also flags an adjective after "be", for example "is based". It misses most irregular participles that are not on its list.
+3. The noun rule flags a run of words that are not on a list of function words, common verbs and adjectives. It can flag a verb or an adjective.
+4. The -ing rule flags a noun that ends in -ing and is not on the allow list, for example a gerund used as a noun.
+5. The checker does not check meaning: one word for one meaning, one topic in each sentence, or the order of information. Use the questions above for these rules.
+
 ## Relation to other instructions
 
 STE controls the language of prose.
