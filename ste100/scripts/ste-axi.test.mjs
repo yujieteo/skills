@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -197,6 +198,18 @@ test("the command line runs from a directory outside the skill", () => {
   assert.equal(run.status, 1);
   assert.match(run.stdout, /"stdin:1",contraction/);
   assert.doesNotMatch(run.stdout, /ste100\//);
+});
+
+test("the command line runs through a symlinked skill directory", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ste-axi-"));
+  try {
+    symlinkSync(dirname(SCRIPT), join(dir, "scripts"));
+    const run = spawnSync(process.execPath, [join(dir, "scripts", "ste-axi.mjs"), "check", "-"], { input: "It's late.\n", encoding: "utf8" });
+    assert.equal(run.status, 1);
+    assert.match(run.stdout, /"stdin:1",contraction/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("the command line reads standard input for -", () => {

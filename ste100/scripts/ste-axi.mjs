@@ -4,7 +4,7 @@
 // report: findings first, then counts by rule. Exit codes: 0 clean, 1 findings, 2 usage error or no prose to check.
 // Usage: ste-axi check <file>... | ste-axi check -   (the "-" reads standard input)
 // Heuristics only, with no network and no dictionary: see "Known limits" in ste100/SKILL.md.
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 export const USAGE = "usage: ste-axi check <file>... | ste-axi check -";
@@ -342,7 +342,7 @@ export function main(argv, readInput) {
   return report(results);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
   const { text, code } = main(process.argv.slice(2), (p) => readFileSync(p === "-" ? 0 : p, "utf8"));
   (code === 2 ? process.stderr : process.stdout).write(text + "\n");
   process.exitCode = code;
