@@ -143,11 +143,16 @@ test("the report puts findings first, then counts by rule, and exits 1", () => {
   assert.match(text, /totals:\n  inputs: 1\n  sentences: 1\n  findings: 2\n/);
 });
 
-test("a clean input exits 0 and --json gives the same findings", () => {
+test("a clean input exits 0", () => {
   assert.deepEqual(main(["check", "a.md"], () => "The test failed.\n"), { text: "status: pass\ntotals:\n  inputs: 1\n  sentences: 1\n  findings: 0", code: 0 });
-  const out = main(["check", "--json", "a.md"], () => "It's late.\n");
-  assert.equal(out.code, 1);
-  assert.equal(JSON.parse(out.text).findings[0].rule, "contraction");
+});
+
+test("a ., ! or ? at the end of quoted text, inline code or a URL ends the sentence", () => {
+  const steps = "Run the test " + "and the next test ".repeat(4) + "now please.";
+  for (const done of ['"Done."', "\u201cDone.\u201d", "`Done.`", "https://x.org/done."]) {
+    assert.deepEqual(rules(`The tool printed ${done} ${steps}`), ["1:long-instruction:21 words, max 20"], done);
+  }
+  assert.deepEqual(rules('The user said "it\'s running; don\'t stop." The test failed.'), []);
 });
 
 test("usage errors, empty and unreadable inputs exit 2, never a pass", () => {
@@ -156,6 +161,7 @@ test("usage errors, empty and unreadable inputs exit 2, never a pass", () => {
   assert.equal(main(["lint", "a.md"], read).code, 2);
   assert.equal(main(["check"], read).code, 2);
   assert.equal(main(["check", "--bad", "a.md"], read).code, 2);
+  assert.equal(main(["check", "--json", "a.md"], read).code, 2);
   assert.equal(main(["check", "a.md"], () => "  \n```\ncode\n```\n").code, 2);
   const missing = main(["check", "a.md"], () => {
     throw new Error("ENOENT");

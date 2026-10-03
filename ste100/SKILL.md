@@ -91,7 +91,6 @@ printf '%s\n' "$TEXT" | node "$STE_AXI" check -
 
 The script uses Node only and no network.
 It prints a short TOON report: the findings first, each with `file:line`, then the counts by rule.
-Add `--json` for JSON output.
 The exit code is 0 for no findings and 1 for findings.
 The exit code is 2 for a usage error, a file that it cannot read, or an input with no prose.
 

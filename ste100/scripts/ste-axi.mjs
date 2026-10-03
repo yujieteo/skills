@@ -2,12 +2,12 @@
 // `ste-axi check [files|-]`: a deterministic STE100 checker for prose. It flags each problem sentence with file:line,
 // so an agent fixes only the flagged lines instead of a second read of the whole text. It prints a short TOON
 // report: findings first, then counts by rule. Exit codes: 0 clean, 1 findings, 2 usage error or no prose to check.
-// Usage: ste-axi check [--json] <file>... | ste-axi check [--json] -   (the "-" reads standard input)
+// Usage: ste-axi check <file>... | ste-axi check -   (the "-" reads standard input)
 // Heuristics only, with no network and no dictionary: see "Known limits" in ste100/SKILL.md.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-export const USAGE = "usage: ste-axi check [--json] <file>... | ste-axi check [--json] -";
+export const USAGE = "usage: ste-axi check <file>... | ste-axi check -";
 export const MAX_DESCRIPTIVE = 25;
 export const MAX_INSTRUCTION = 20;
 export const MAX_NOUNS = 3;
@@ -76,9 +76,16 @@ const CONTRACTION = /\b(?:\w+n['’]t|(?:it|that|there|here|what|who|let|he|she|
 /** @typedef {{ file: string, line: number, rule: string, detail: string, text: string }} Finding */
 /** @typedef {{ text: string, orig: string, lines: number[] }} Unit */
 
-// Replaces every character of a match with spaces except one marker, so offsets keep their lines.
+// Replaces every character of a match with spaces except one marker, so offsets keep their lines. A final ., ! or ?
+// of the match stays, so that it can end the sentence.
 /** @param {string} s @param {RegExp} re */
-const mask = (s, re) => s.replace(re, (m) => "X" + m.slice(1).replace(/[^\n]/g, " "));
+const mask = (s, re) =>
+  s.replace(re, (m) => {
+    const end = /[.!?]+(?=["”`]?$)/.exec(m.slice(1));
+    const cut = end ? end.index + 1 : m.length;
+    const kept = end ? end[0] + " ".repeat(m.length - cut - end[0].length) : "";
+    return "X" + m.slice(1, cut).replace(/[^\n]/g, " ") + kept;
+  });
 
 // Masks what the check must skip: inline code, URLs, Markdown link targets, quoted text and abbreviations.
 /** @param {string} s */
@@ -292,8 +299,8 @@ export const cell = (v) => {
 const table = (name, fields, rows) => [`${name}[${rows.length}]{${fields.join(",")}}:`, ...rows.map((r) => "  " + r.map(cell).join(","))];
 
 // The report and its exit code for checked inputs.
-/** @param {{ file: string, findings: Finding[], sentences: number }[]} results @param {{ json?: boolean }} [options] */
-export function report(results, { json = false } = {}) {
+/** @param {{ file: string, findings: Finding[], sentences: number }[]} results */
+export function report(results) {
   const findings = results.flatMap((r) => r.findings);
   const sentenceCount = results.reduce((n, r) => n + r.sentences, 0);
   /** @type {Map<string, number>} */
@@ -301,10 +308,6 @@ export function report(results, { json = false } = {}) {
   for (const f of findings) byRule.set(f.rule, (byRule.get(f.rule) ?? 0) + 1);
   const rules = [...byRule].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const code = findings.length ? 1 : 0;
-  if (json) {
-    const out = { status: code ? "fail" : "pass", findings, by_rule: Object.fromEntries(rules), totals: { inputs: results.length, sentences: sentenceCount, findings: findings.length } };
-    return { text: JSON.stringify(out, null, 2), code };
-  }
   const lines = [`status: ${code ? "fail" : "pass"}`];
   if (findings.length) {
     lines.push(...table("findings", ["file_line", "rule", "detail", "text"], findings.map((f) => [`${f.file}:${f.line}`, f.rule, f.detail, f.text])));
@@ -320,10 +323,8 @@ export function report(results, { json = false } = {}) {
 // Runs the command line and returns the output and the exit code. readInput reads a path, or standard input for "-".
 /** @param {string[]} argv @param {(path: string) => string} readInput */
 export function main(argv, readInput) {
-  const args = [...argv];
-  if (args.shift() !== "check") return { text: USAGE, code: 2 };
-  const json = args.includes("--json");
-  const inputs = args.filter((a) => a !== "--json");
+  const inputs = [...argv];
+  if (inputs.shift() !== "check") return { text: USAGE, code: 2 };
   const unknown = inputs.find((a) => a.startsWith("--"));
   if (unknown) return { text: `${USAGE}\nerror: unknown option ${unknown}`, code: 2 };
   if (!inputs.length) return { text: `${USAGE}\nerror: no input; give files, or - for standard input`, code: 2 };
@@ -340,7 +341,7 @@ export function main(argv, readInput) {
     if (!checked.sentences) return { text: `error: ${name} has no prose to check; an empty input is not a pass`, code: 2 };
     results.push({ file: name, ...checked });
   }
-  return report(results, { json });
+  return report(results);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
