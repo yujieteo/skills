@@ -1,6 +1,6 @@
 ---
 name: mac-agent-workstation
-description: Set up a fresh Mac as the owner's agent workstation, with Homebrew, gh, Claude Code, Codex, herdr, the firstmate toolchain, and this skills repository. Use when provisioning or rebuilding a Mac for agent work, or when checking that a machine still matches that setup.
+description: Set up a fresh Mac as the owner's agent workstation from the Nix flake in the private dotfiles repository, with gh, Claude Code, Codex, herdr, the firstmate toolchain, and this skills repository. Use when provisioning or rebuilding a Mac for agent work, or when checking that a machine still matches that setup.
 ---
 
 # Mac agent workstation
@@ -23,43 +23,41 @@ xcode-select --install
 
 **Verify:** `xcode-select -p` prints a path, and `git --version` works.
 
-## 2. Homebrew
+## 2. Clone the dotfiles flake
 
-Install from [brew.sh](https://brew.sh) with its official one-line installer, then add `eval "$(/opt/homebrew/bin/brew shellenv)"` to `~/.zprofile` if the installer asks you to.
+The machine is declared by a Nix flake (nix-darwin and Home Manager) in the private `yujieteo/dotfiles` repository. The flake, not this skill, is the source of truth for packages, settings, and the casks that nix-darwin installs through Homebrew. Its `docs/setup.md` names the owner of each layer.
 
-**Verify:** `brew --version` and `command -v brew` returns `/opt/homebrew/bin/brew`.
-
-## 3. Base formulae and casks
+The repository is private, so anonymous HTTPS clones fail. Restore or create an SSH key first, add it to GitHub, and confirm `ssh -T git@github.com` names the owner's account. Then clone over SSH to `~/dotfiles`, the path the flake requires:
 
 ```sh
-brew install git gh jq node mise uv tmux stow
-brew install --cask codex google-chrome
+git clone git@github.com:yujieteo/dotfiles.git ~/dotfiles
 ```
 
-**Verify:** each of `gh jq node mise uv tmux stow codex` resolves with `command -v`, and `node --version` is 22 or newer.
+**Verify:** `git -C ~/dotfiles remote get-url origin` prints the SSH URL, and `~/dotfiles/flake.nix` exists.
 
-## 4. Dotfiles
-
-Clone the public dotfiles repository to its own directory and apply it with Stow, following its README section "Applying the configuration": back up, dry run, then apply.
+## 3. Bootstrap and activate the flake
 
 ```sh
-git clone https://github.com/yujieteo/dotfiles.git ~/src/dotfiles
-cd ~/src/dotfiles && stow -n -v -t ~ home vscode
+bash ~/dotfiles/setup/mac.sh
 ```
 
-Resolve every conflict the dry run reports, then rerun without `-n`. Leave `home/.config/gh/hosts.yml` out of the links if it holds anything but a keyring reference.
+The script installs Determinate Nix and Homebrew, runs the first `darwin-rebuild switch` against the flake, installs herdr, and clones this skills repository. Each step skips work that is already done, so rerun it after you fix a failure. Then open a new terminal.
 
-**Verify:** `~/src/dotfiles/scripts/check.sh` passes, and a new zsh starts without errors.
+Do not run `brew install` by hand: activation uninstalls any formula or cask that the flake does not list. Add packages to the flake and run `rebuild` instead. Generated files such as `~/.zshrc` and `~/.config/git/config` are read-only links into the Nix store; change the Nix source, not the file.
 
-## 5. Python through mise
+**Verify:** `command -v nix darwin-rebuild` resolves both, `darwin-version` prints the dotfiles commit, `~/dotfiles/scripts/check.sh` passes, and a new zsh starts without errors.
 
-```sh
-mise use -g python@3.14
-```
+## 4. Tools from the flake
 
-Make sure `~/.zshrc` activates mise (`eval "$(mise activate zsh)"`); the dotfiles may already do this.
+The flake installs the CLI tools, the coding agents it pins (`claude-code`, `codex`, `opencode`), and the mise configuration with Python 3.14.
 
-**Verify:** in a new shell, `mise ls` lists python 3.14 and `command -v python3` points under `~/.local/share/mise/installs/`.
+**Verify:** each of `gh jq mise uv claude codex` resolves with `command -v` to a Nix path, and in a new shell `mise ls` lists python 3.14.
+
+## 5. Tools the flake does not install yet
+
+Check the flake first. For each tool below that it does not declare yet, install it with its own installer: `node` for the npm tools in step 8, and `tmux` if `~/.tmux.conf` is linked but the package is absent. Prefer adding the tool to the flake over a manual install.
+
+**Verify:** `node --version` is 22 or newer.
 
 ## 6. GitHub authentication (provisional)
 
@@ -69,7 +67,7 @@ Make sure `~/.zshrc` activates mise (`eval "$(mise activate zsh)"`); the dotfile
 gh auth login
 ```
 
-Choose github.com, SSH as the Git protocol, and let `gh` upload a new SSH key. Store the credential in the system keyring, not a plain-text file.
+Choose github.com and SSH as the Git protocol. Use the SSH key from step 2; do not let `gh` upload another key. Store the credential in the system keyring, not a plain-text file.
 
 For any token you create by hand, such as a CI secret or an agent's token: use a fine-grained personal access token scoped to the repositories the task needs. Do not grant Administration or delete rights unless the task creates repositories.
 
@@ -83,9 +81,9 @@ Install Claude Code with Anthropic's native installer, which puts `claude` in `~
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-Codex came from the cask in step 3. Start each once and sign in interactively: `claude`, then `codex`.
+The flake also pins `claude-code`; the native installer gives a newer release. Codex comes from the flake. Start each once and sign in interactively: `claude`, then `codex login`.
 
-**Verify:** `claude --version` and `command -v codex` both succeed. `codex --version` can hang on first run; `ls /opt/homebrew/Caskroom/codex` shows the installed version instead.
+**Verify:** `claude --version` and `command -v codex` both succeed.
 
 ## 8. Firstmate toolchain
 
@@ -113,32 +111,33 @@ npm install -g tasks-axi quota-axi
 Install herdr from [herdr.dev](https://herdr.dev). Firstmate needs protocol 14 or newer. Then install the agent-state integration for each harness you run inside herdr:
 
 ```sh
+herdr integration install claude
 herdr integration install codex
 ```
 
-**Verify:** `herdr --version` prints a version and `herdr integration status` shows `codex: current`.
+`setup/mac.sh` in step 3 already does this when herdr is missing.
+
+**Verify:** `herdr --version` prints a version and `herdr integration status` shows `claude: current` and `codex: current`.
 
 ## 10. Skills repository
 
-Codex reads the clone directly:
+`setup/mac.sh` clones this repository to `~/src/skills`. If the flake pins it as an input and links the skills during activation, use those links and skip the manual links below. Edits then go to `~/src/skills`, followed by `nix flake update skills` and `rebuild`.
+
+Codex and Pi read user skills from `~/.agents/skills`. Claude Code reads `~/.claude/skills`. Neither reads `~/.codex/skills`; do not clone a second copy there. Link the skills you want, and never overwrite an entry that is already there:
 
 ```sh
-git clone git@github.com:yujieteo/skills.git ~/.codex/skills
-```
-
-Claude Code does not read `~/.codex/skills`. Link the skills you want into `~/.claude/skills`, and never overwrite a directory that is already there:
-
-```sh
-mkdir -p ~/.claude/skills
-for f in ~/.codex/skills/*/SKILL.md; do
+mkdir -p ~/.agents/skills ~/.claude/skills
+for f in ~/src/skills/*/SKILL.md; do
   d=$(dirname "$f"); n=$(basename "$d")
-  [ -e ~/.claude/skills/"$n" ] || ln -s "$d" ~/.claude/skills/"$n"
+  for t in ~/.agents/skills ~/.claude/skills; do
+    [ -e "$t/$n" ] || ln -s "$d" "$t/$n"
+  done
 done
 ```
 
-The reference machine does not link these yet; Claude Code there gets its skills from synced and project sources. Ask the owner before linking all of them.
+Ask the owner before linking all of them.
 
-**Verify:** `node ~/.codex/skills/skill-sharpening/scripts/verify-collection.mjs` exits 0. A new `codex` session lists `skills-router`. If you linked them, `ls -l ~/.claude/skills` shows them as links.
+**Verify:** `node ~/src/skills/skill-sharpening/scripts/verify-collection.mjs` exits 0. A new `codex` session lists `skills-router`. `ls -l ~/.agents/skills ~/.claude/skills` shows the links.
 
 ## 11. Firstmate
 
@@ -162,14 +161,14 @@ Under herdr, firstmate detects the backend from `HERDR_ENV=1`, so no `config/bac
 Run this in a new terminal and keep the output as the record of the run. It prints versions and the auth mode only, with no credentials.
 
 ```sh
-for c in brew git gh jq node npm mise uv tmux stow python3 claude codex \
+for c in nix darwin-rebuild brew git gh jq node npm mise uv tmux python3 claude codex \
          herdr treehouse no-mistakes gh-axi chrome-devtools-axi lavish-axi tasks-axi quota-axi; do
   printf '%-20s %s\n' "$c" "$(command -v "$c" || echo MISSING)"
 done
 gh auth status 2>&1 | grep -E 'Logged in|protocol' | sed -E 's/account [^ ]+/account <owner>/'
 herdr integration status | grep -E '^(codex|claude):'
-node ~/.codex/skills/skill-sharpening/scripts/verify-collection.mjs >/dev/null && echo "skills: ok"
+node ~/src/skills/skill-sharpening/scripts/verify-collection.mjs >/dev/null && echo "skills: ok"
 (cd ~/src/firstmate && bin/fm-bootstrap.sh) | grep -v '^BOOTSTRAP_INFO' || echo "firstmate bootstrap: clean"
 ```
 
-The run is done when no line says `MISSING`, gh shows a keyring login over `ssh`, codex is `current`, `skills: ok` prints, and the bootstrap is clean. Report any line that fails, by name.
+The run is done when no line says `MISSING`, gh shows a keyring login over `ssh`, claude and codex are `current`, `skills: ok` prints, and the bootstrap is clean. Report any line that fails, by name.
