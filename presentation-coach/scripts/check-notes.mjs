@@ -9,7 +9,9 @@ if (!deckPath || !notesPath) {
   process.exit(2);
 }
 const deckIds = [...readFileSync(deckPath, "utf8").matchAll(/<section class="slide[^"]*" id="([^"]+)"/g)].map((m) => m[1]);
+/** @type {{ id: string, fields: Record<string, string>, words: number }[]} */
 const sections = [];
+/** @type {string | null} */
 let lastKey = null;
 for (const line of readFileSync(notesPath, "utf8").split("\n")) {
   const heading = line.match(/^##\s+(\S+)\s*$/);
@@ -30,6 +32,7 @@ for (const line of readFileSync(notesPath, "utf8").split("\n")) {
   }
 }
 
+/** @type {string[]} */
 const problems = [];
 const seconds = (text = "") => {
   const clock = text.match(/^(\d+):(\d{2})$/);
@@ -57,7 +60,7 @@ deckIds.forEach((id, k) => {
   if (s.words > 220) problems.push(`${id}: ${s.words} words; notes should be glanceable (220 max)`);
 });
 const planned = seconds(deck?.fields["total time"]);
-if (planned && Math.abs(total - planned) > planned * 0.1) problems.push(`slide times sum to ${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}, not within 10% of total time ${deck.fields["total time"]}`);
+if (planned && Math.abs(total - planned) > planned * 0.1) problems.push(`slide times sum to ${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}, not within 10% of total time ${deck?.fields["total time"]}`);
 
 if (problems.length) {
   console.error(problems.map((p) => `- ${p}`).join("\n"));

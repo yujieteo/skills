@@ -30,7 +30,7 @@ Fix every error. A warning is a smell worth a look, not always a bug.
 
 | Rule | Severity | What it checks |
 |---|---|---|
-| `layout/not-a-skill` | error | Every top-level directory has a `SKILL.md` |
+| `layout/not-a-skill` | error | Every top-level directory, except hidden ones and an installed `node_modules`, has a `SKILL.md` |
 | `layout/nested-skill` | error | No `SKILL.md` below the top level |
 | `frontmatter/parse`, `frontmatter/unknown-key`, `frontmatter/required` | error | Frontmatter parses, uses only `name`, `description`, `allowed-tools`, `license`, or `metadata`, and has `name` and `description` |
 | `name/format`, `name/matches-directory` | error | `name` is lowercase kebab case and equals the directory name |

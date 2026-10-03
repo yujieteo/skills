@@ -1,0 +1,12 @@
+{
+  "name": "skills",
+  "private": true,
+  "description": "Pins the type-check tooling only: tsc checks the JSDoc types in the collection's own JavaScript and the example pages' inline scripts. No runtime dependencies, no build and no test framework.",
+  "scripts": {
+    "typecheck": "node skill-sharpening/scripts/extract-inline.mjs generate-slide-deck/assets/deck-shell.html generate-slide-deck/examples/fpl-early-season/index.html generate-visualization/examples/anscombe-quartet/index.html && tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2"
+  }
+}

@@ -10,7 +10,7 @@ if (!path) {
   process.exit(2);
 }
 const html = readFileSync(path, "utf8");
-const strip = (fragment) =>
+const strip = (/** @type {string} */ fragment) =>
   fragment
     .replace(/<(script|style)[\s\S]*?<\/\1>/g, " ")
     .replace(/<[^>]+>/g, " ")

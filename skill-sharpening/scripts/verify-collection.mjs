@@ -8,15 +8,25 @@ import { basename, dirname, join, normalize, relative, resolve } from "node:path
 import { fileURLToPath } from "node:url";
 import { loadSkills, wordCount } from "./lib/skills.mjs";
 
+/** @import { Skill } from "./lib/skills.mjs" */
+/** @typedef {(rule: string, file: string, message: string) => void} Report */
+/** @typedef {{ severity: "error" | "warning", rule: string, file: string, message: string }} Finding */
+/**
+ * What every check reads and reports through.
+ * @typedef {{ repository: string, skills: Skill[], skillNames: Set<string>, files: string[], error: Report, warn: Report }} Context
+ */
+
 const ALLOWED_KEYS = new Set(["name", "description", "allowed-tools", "license", "metadata"]);
 const DESCRIPTION_WORD_LIMIT = 60;
 const DESCRIPTION_CHAR_LIMIT = 1024;
 const ENTRYPOINT_WORD_LIMIT = 2000;
 const NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const TRIGGER_PATTERN = /\b(use|apply|run|invoke)\b[^.]*\b(when|for|to|before|after|during|only|on|whenever)\b|\bmust always apply\b/i;
+/** @type {Record<string, string[]>} */
 const OPENAI_YAML_KEYS = { policy: ["allow_implicit_invocation"], interface: ["display_name", "short_description", "default_prompt"] };
 const SKIPPED_DIRECTORIES = new Set([".git", ".system", "node_modules", ".firecrawl", "dist", "build"]);
 
+/** Every file under directory, outside the skipped directories. @param {string} directory @returns {string[]} */
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (SKIPPED_DIRECTORIES.has(entry.name)) return [];
@@ -25,6 +35,7 @@ function walk(directory) {
   });
 }
 
+/** @param {string} markdown */
 function localLinks(markdown) {
   const withoutCode = markdown.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
   return [...withoutCode.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)]
@@ -32,10 +43,12 @@ function localLinks(markdown) {
     .filter((target) => !/^([a-z][a-z0-9+.-]*:|#)|^(link|url)$/i.test(target));
 }
 
-// Layout: every top-level directory is a skill, and no skill is nested.
+// Layout: every top-level directory is a skill, and no skill is nested. Hidden and skipped directories (an
+// installed node_modules, say) are not skills.
+/** @param {Context} context */
 function checkLayout({ repository, skillNames, files, error }) {
   for (const entry of readdirSync(repository, { withFileTypes: true })) {
-    if (entry.isDirectory() && !entry.name.startsWith(".") && !skillNames.has(entry.name)) {
+    if (entry.isDirectory() && !entry.name.startsWith(".") && !SKIPPED_DIRECTORIES.has(entry.name) && !skillNames.has(entry.name)) {
       error("layout/not-a-skill", join(repository, entry.name), "top-level directory has no SKILL.md");
     }
   }
@@ -44,6 +57,11 @@ function checkLayout({ repository, skillNames, files, error }) {
   }
 }
 
+/**
+ * @param {{ path: string, description: string, dirName: string }} skill
+ * @param {Map<string, string>} descriptions every description seen so far, lowercased, to its skill
+ * @param {Context} context
+ */
 function checkDescription({ path, description, dirName }, descriptions, { error, warn }) {
   const descriptionWords = wordCount(description);
   if (descriptionWords > DESCRIPTION_WORD_LIMIT) {
@@ -61,6 +79,7 @@ function checkDescription({ path, description, dirName }, descriptions, { error,
   else descriptions.set(key, dirName);
 }
 
+/** @param {Skill} skill @param {Context} context */
 function checkEntrypoint(skill, { repository, error, warn }) {
   const { path, body } = skill;
   const entrypointWords = wordCount(skill.content);
@@ -80,8 +99,10 @@ function checkEntrypoint(skill, { repository, error, warn }) {
 }
 
 // Frontmatter and entry point.
+/** @param {Context} context */
 function checkSkills(context) {
   const { skills, error } = context;
+  /** @type {Map<string, string>} */
   const descriptions = new Map();
   for (const skill of skills) {
     const { path, fields, errors, dirName } = skill;
@@ -106,6 +127,7 @@ function checkSkills(context) {
 }
 
 // Relative links in every Markdown file of every skill, plus the root docs.
+/** @param {Context} context */
 function checkLinks({ files, error, warn }) {
   for (const file of files.filter((path) => path.endsWith(".md"))) {
     for (const target of localLinks(readFileSync(file, "utf8"))) {
@@ -120,10 +142,12 @@ function checkLinks({ files, error, warn }) {
 }
 
 // agents/openai.yaml: only keys the host understands, with valid values.
+/** @param {Context} context */
 function checkOpenAiYaml({ skills, error }) {
   for (const skill of skills) {
     const yamlPath = join(skill.directory, "agents", "openai.yaml");
     if (!existsSync(yamlPath)) continue;
+    /** @type {string | null} */
     let section = null;
     for (const [index, line] of readFileSync(yamlPath, "utf8").split(/\r?\n/).entries()) {
       if (!line.trim() || line.trimStart().startsWith("#")) continue;
@@ -149,6 +173,7 @@ function checkOpenAiYaml({ skills, error }) {
 }
 
 // Router: every skill is reachable, and the router names no missing skill.
+/** @param {Context} context */
 function checkRouter({ repository, skillNames, error }) {
   const routerPath = join(repository, "skills-router", "SKILL.md");
   if (!existsSync(routerPath)) return;
@@ -167,6 +192,7 @@ function checkRouter({ repository, skillNames, error }) {
 }
 
 // Provenance: every skill's lineage is recorded.
+/** @param {Context} context */
 function checkProvenance({ repository, skillNames, warn }) {
   const provenancePath = join(repository, "PROVENANCE.md");
   if (!existsSync(provenancePath)) return;
@@ -180,6 +206,7 @@ function checkProvenance({ repository, skillNames, warn }) {
 }
 
 // Scripts that ship with a skill should be runnable.
+/** @param {Context} context */
 function checkScripts({ files, warn }) {
   for (const file of files.filter((path) => /\/scripts\/[^/]+\.(sh|py)$/.test(path) && !path.includes(".template."))) {
     const executable = (statSync(file).mode & 0o111) !== 0;
@@ -188,17 +215,21 @@ function checkScripts({ files, warn }) {
 }
 
 // Run every check over one collection. Findings come back errors first, each in discovery order.
+/** @param {string} repository */
 export function lintCollection(repository) {
+  /** @type {Finding[]} */
   const findings = [];
+  /** @type {(severity: Finding["severity"], rule: string, file: string, message: string) => void} */
   const report = (severity, rule, file, message) => findings.push({ severity, rule, file: relative(repository, file), message });
   const skills = loadSkills(repository);
+  /** @type {Context} */
   const context = {
     repository,
     skills,
     skillNames: new Set(skills.map((skill) => skill.dirName)),
     files: walk(repository),
-    error: (...rest) => report("error", ...rest),
-    warn: (...rest) => report("warning", ...rest),
+    error: (rule, file, message) => report("error", rule, file, message),
+    warn: (rule, file, message) => report("warning", rule, file, message),
   };
   for (const check of [checkLayout, checkSkills, checkLinks, checkOpenAiYaml, checkRouter, checkProvenance, checkScripts]) check(context);
   const errors = findings.filter((finding) => finding.severity === "error");
@@ -206,6 +237,7 @@ export function lintCollection(repository) {
   return { skillCount: skills.length, errors, warnings };
 }
 
+/** @param {string[]} args @returns {number} the exit code */
 function main(args) {
   const strict = args.includes("--strict");
   const scriptDirectory = dirname(fileURLToPath(import.meta.url));

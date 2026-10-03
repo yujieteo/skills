@@ -268,9 +268,12 @@
 
 <script>
   (function () {
+    /** @type {HTMLElement[]} */
     var plots = Array.prototype.slice.call(document.querySelectorAll('.plot'));
-    var detail = document.getElementById('detail');
-    var resetBtn = document.getElementById('reset');
+    // Both are in the page above.
+    var detail = /** @type {HTMLElement} */ (document.getElementById('detail'));
+    var resetBtn = /** @type {HTMLElement} */ (document.getElementById('reset'));
+    /** @type {HTMLTableRowElement[]} */
     var rows = Array.prototype.slice.call(document.querySelectorAll('#data-table tbody tr'));
     var names = ['I', 'II', 'III', 'IV'];
     var notes = [
@@ -287,8 +290,10 @@
     ];
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var overviewHTML = detail.innerHTML;
+    /** @type {number | null} */
     var selected = null;
 
+    /** @param {number} i */
     function valuesFor(i) {
       return rows.map(function (tr) {
         var cells = tr.children;
@@ -299,6 +304,7 @@
       });
     }
 
+    /** @param {string} html */
     function render(html) {
       detail.innerHTML = html;
       if (!reduced) {
@@ -308,6 +314,7 @@
       }
     }
 
+    /** @param {number} i */
     function renderSet(i) {
       var list = valuesFor(i).map(function (v) {
         return '<li>x ' + v.x + ' · y ' + v.y + '</li>';

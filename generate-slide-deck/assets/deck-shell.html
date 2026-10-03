@@ -130,29 +130,43 @@ body.presenter #notes{display:block;position:absolute;right:0;top:0;bottom:0;wid
 <script>
 /* ===== Deck runtime: navigation, scaling, notes, presenter sync, audit. Do not edit per deck. ===== */
 document.documentElement.classList.add('js');
+/** @typedef {{label:string,text:string,items:string[]}} NoteField */
+/** @typedef {{id:string,fields:NoteField[]}} NoteSection */
+/** @typedef {{root:SVGSVGElement,w:number,h:number,m:{t:number,r:number,b:number,l:number},iw:number,ih:number}} Chart */
 const Deck=(()=>{
-  const $=s=>document.querySelector(s), stage=$('#stage'), tip=$('#tip'), notesEl=$('#notes');
-  const slides=[...stage.querySelectorAll('.slide')];
+  /* The shell's own elements, and the chart hosts a deck names, are in the page. */
+  const $=(/** @type {string} */ s)=>/** @type {HTMLElement} */ (document.querySelector(s)), stage=$('#stage'), tip=$('#tip'), notesEl=$('#notes');
+  const slides=/** @type {HTMLElement[]} */ ([...stage.querySelectorAll('.slide')]);
   const params=new URLSearchParams(location.search);
   const presenter=params.has('presenter');
-  let i=0, step=0, scale=1, notes=null, notesOpen=false, t0=Date.now(), channel=null;
+  let i=0, step=0, scale=1, notesOpen=false, t0=Date.now();
+  /** @type {{sections:Record<string,NoteSection>,order:string[]}|null} */
+  let notes=null;
+  /** @type {BroadcastChannel|null} */
+  let channel=null;
   const NS='http://www.w3.org/2000/svg';
   if(presenter)document.body.classList.add('presenter');
 
   /* --- chart helpers --- */
-  const svg=(tag,attrs={},...kids)=>{const n=document.createElementNS(NS,tag);for(const k in attrs)if(attrs[k]!=null)n.setAttribute(k,attrs[k]);for(const c of kids.flat())n.append(c.nodeType?c:document.createTextNode(c));return n};
-  const linear=(d0,d1,r0,r1)=>{const f=v=>r0+(v-d0)/(d1-d0)*(r1-r0);f.domain=[d0,d1];f.range=[r0,r1];return f};
-  const ticks=(a,b,n=5)=>{const raw=(b-a)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,s=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p,out=[];for(let v=Math.ceil(a/s)*s;v<=b+1e-9;v+=s)out.push(+v.toFixed(10));return out};
-  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  /** @type {(tag:string,attrs?:Record<string,unknown>,...kids:(Node|string|number|(Node|string|number)[])[])=>SVGElement} */
+  const svg=(tag,attrs={},...kids)=>{const n=document.createElementNS(NS,tag);for(const k in attrs)if(attrs[k]!=null)n.setAttribute(k,String(attrs[k]));for(const c of kids.flat())n.append(typeof c==='object'&&c.nodeType?c:document.createTextNode(String(c)));return /** @type {SVGElement} */ (n)};
+  /** A linear scale from [d0,d1] to [r0,r1], carrying its domain and range. @type {(d0:number,d1:number,r0:number,r1:number)=>((v:number)=>number)&{domain:number[],range:number[]}} */
+  const linear=(d0,d1,r0,r1)=>{const f=Object.assign((/** @type {number} */ v)=>r0+(v-d0)/(d1-d0)*(r1-r0),{domain:[d0,d1],range:[r0,r1]});return f};
+  const ticks=(/** @type {number} */ a,/** @type {number} */ b,n=5)=>{/** @type {number[]} */ const out=[];const raw=(b-a)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,s=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;for(let v=Math.ceil(a/s)*s;v<=b+1e-9;v+=s)out.push(+v.toFixed(10));return out};
+  /** @type {Record<string,string>} */
+  const ENTITIES={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+  const esc=(/** @type {unknown} */ s)=>String(s).replace(/[&<>"']/g,c=>ENTITIES[c]);
   const data=()=>JSON.parse($('#deck-data').textContent||'{}');
   /* Chart: returns {root, x, y} for an svg sized exactly to its container, in stage pixels. */
+  /** @param {string|HTMLElement} host @param {{margin?:Chart['m']}} [options] @returns {Chart} */
   const chart=(host,{margin={t:20,r:30,b:70,l:90}}={})=>{
     const el=typeof host==='string'?$(host):host, w=Math.round(el.clientWidth), h=Math.round(el.clientHeight);
-    const root=svg('svg',{viewBox:`0 0 ${w} ${h}`,width:w,height:h,role:'img'});
+    const root=/** @type {SVGSVGElement} */ (svg('svg',{viewBox:`0 0 ${w} ${h}`,width:w,height:h,role:'img'}));
     el.replaceChildren(root);
     return {root,w,h,m:margin,iw:w-margin.l-margin.r,ih:h-margin.t-margin.b};
   };
-  const hover=(el,html)=>{el.setAttribute('tabindex','0');const on=()=>showTip(el,html),off=()=>tip.classList.remove('on');el.addEventListener('mouseenter',on);el.addEventListener('focus',on);el.addEventListener('mouseleave',off);el.addEventListener('blur',off)};
+  const hover=(/** @type {Element} */ el,/** @type {string} */ html)=>{el.setAttribute('tabindex','0');const on=()=>showTip(el,html),off=()=>tip.classList.remove('on');el.addEventListener('mouseenter',on);el.addEventListener('focus',on);el.addEventListener('mouseleave',off);el.addEventListener('blur',off)};
+  /** @param {Element} el @param {string} html */
   function showTip(el,html){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();tip.innerHTML=html;tip.classList.add('on');tip.style.left=Math.max(160,Math.min(1760,(r.left+r.width/2-s.left)/scale))+'px';tip.style.top=Math.max(60,(r.top-s.top)/scale)+'px'}
 
   /* --- layout --- */
@@ -174,10 +188,10 @@ const Deck=(()=>{
   }
 
   /* --- navigation --- */
-  const maxStep=s=>Math.max(0,...[...s.querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0));
+  const maxStep=(/** @type {Element} */ s)=>Math.max(0,...[.../** @type {NodeListOf<HTMLElement>} */ (s.querySelectorAll('[data-step]'))].map(e=>+(e.dataset.step??0)||0));
   function render(){
     slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.setAttribute('aria-hidden',k===i?'false':'true')});
-    slides[i].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));
+    /** @type {NodeListOf<HTMLElement>} */ (slides[i].querySelectorAll('[data-step]')).forEach(e=>e.classList.toggle('shown',(+(e.dataset.step??0)||0)<=step));
     $('#count').textContent=`${i+1} / ${slides.length}`;
     $('#bar').style.width=((i+1)/slides.length*100)+'%';
     tip.classList.remove('on');
@@ -185,6 +199,7 @@ const Deck=(()=>{
     renderNotes();
   }
   const docTitle=document.title;
+  /** @param {number} n @param {number} [st] @param {boolean} [fromSync] */
   function go(n,st=0,fromSync=false){
     i=Math.max(0,Math.min(slides.length-1,n));step=Math.min(st,maxStep(slides[i]));
     history.replaceState(null,'','#'+(i+1)); render();
@@ -194,9 +209,15 @@ const Deck=(()=>{
   const prev=()=>{step>0?go(i,step-1):i>0&&go(i-1,maxStep(slides[i-1]))};
 
   /* --- notes: sidecar notes.md, parsed in the browser. Missing file = no notes, deck still works. --- */
-  const inline=t=>esc(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const inline=(/** @type {string} */ t)=>esc(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  /** @param {string} md */
   function parseNotes(md){
-    const out={sections:{},order:[]};let cur=null,field=null;
+    /** @type {{sections:Record<string,NoteSection>,order:string[]}} */
+    const out={sections:{},order:[]};
+    /** @type {NoteSection|null} */
+    let cur=null;
+    /** @type {NoteField|null} */
+    let field=null;
     for(const line of md.split('\n')){
       const h=line.match(/^##\s+(\S+)\s*$/);
       if(h){cur={id:h[1],fields:[]};out.sections[cur.id]=cur;out.order.push(cur.id);field=null;continue}
@@ -209,6 +230,7 @@ const Deck=(()=>{
     }
     return out;
   }
+  /** @param {NoteField} f */
   function fieldHtml(f){return `<div class="field"><b>${esc(f.label)}</b>${f.text?`<div>${inline(f.text)}</div>`:''}${f.items.length?`<ul>${f.items.map(x=>`<li>${inline(x)}</li>`).join('')}</ul>`:''}</div>`}
   function renderNotes(){
     if(!(notesOpen||presenter))return;
@@ -242,6 +264,7 @@ const Deck=(()=>{
     else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.()}
     else if(k==='?')help.classList.add('on');
   });
+  /** @type {number|null} */
   let tx=null;
   addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
   addEventListener('touchend',e=>{if(tx==null)return;const d=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(d)>60)d<0?next():prev()});
@@ -254,8 +277,10 @@ const Deck=(()=>{
   try{channel=new BroadcastChannel('deck:'+location.pathname);channel.onmessage=e=>go(e.data.i,e.data.step,true)}catch{}
 
   /* --- chart registry: the stage is a fixed 1920x1080 box, so each painter runs once at boot. --- */
+  /** A deck's painter draws one slide's charts from the deck's data. @typedef {(slide:HTMLElement,data:any)=>void} Painter */
+  /** @type {[string,Painter][]} */
   const painters=[];
-  const paint=(id,fn)=>painters.push([id,fn]);
+  const paint=(/** @type {string} */ id,/** @type {Painter} */ fn)=>painters.push([id,fn]);
   function boot(){
     fit();
     for(const [id,fn] of painters){const s=document.getElementById(id);if(!s)throw new Error('paint: no slide '+id);fn(s,data())}
@@ -266,11 +291,13 @@ const Deck=(()=>{
 
   /* --- audit: run from the browser console or a devtools eval. Returns a list of problems. --- */
   function audit({minText=22}={}){
-    const problems=[],sr=stage.getBoundingClientRect();
+    /** @type {string[]} */
+    const problems=[];const sr=stage.getBoundingClientRect();
     slides.forEach((s,k)=>{
       s.querySelectorAll('[data-step]').forEach(e=>e.classList.add('shown'));
       const box=s.getBoundingClientRect(),name=s.id;
       const leaves=[...s.querySelectorAll('*')].filter(e=>!e.children.length&&e.textContent.trim()&&!e.closest('#tip'));
+      /** @type {{label:string,r:DOMRect}[]} */
       const rects=[];
       for(const e of leaves){
         const cs=getComputedStyle(e);let px=parseFloat(cs.fontSize);
@@ -288,19 +315,22 @@ const Deck=(()=>{
         if(ox>2*scale&&oy>4*scale)problems.push(`${name}: "${rects[a].label}" overlaps "${rects[b].label}"`);
       }
       if(s.scrollHeight>s.clientHeight+2)problems.push(`${name}: content taller than the slide`);
-      s.querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step&&k===i));
+      /** @type {NodeListOf<HTMLElement>} */ (s.querySelectorAll('[data-step]')).forEach(e=>e.classList.toggle('shown',(+(e.dataset.step??0)||0)<=step&&k===i));
     });
     return problems;
   }
 
   /* --- WebMCP: read-only, same baseline as generate-visualization. Notes are never exposed. --- */
+  /** @param {Record<string,unknown>} meta deck-level metadata: source, source_url, fetched */
   function registerTools(meta){
-    const mc=(typeof document!=='undefined'&&document.modelContext)||(typeof navigator!=='undefined'&&navigator.modelContext);
-    const text=v=>({content:[{type:'text',text:typeof v==='string'?v:JSON.stringify(v)}]});
+    /* WebMCP is not yet in the DOM types. */
+    /** @type {{registerTool(tool:{name:string,description:string,inputSchema:object,annotations:object,execute(input:any):Promise<object>}):void}|undefined} */
+    const mc=(typeof document!=='undefined'&&/** @type {any} */ (document).modelContext)||(typeof navigator!=='undefined'&&/** @type {any} */ (navigator).modelContext);
+    const text=(/** @type {unknown} */ v)=>({content:[{type:'text',text:typeof v==='string'?v:JSON.stringify(v)}]});
     const ro={readOnlyHint:true},empty={type:'object',properties:{}};
     mc?.registerTool({name:'get_data',description:'Return the full dataset embedded in this deck.',inputSchema:empty,annotations:ro,async execute(){return text(data())}});
     mc?.registerTool({name:'get_metadata',description:'Deck title, sources, fetch date and the slide list with ids and headlines.',inputSchema:empty,annotations:ro,async execute(){return text({title:docTitle,...meta,slides:slides.map((s,k)=>({n:k+1,id:s.id,title:s.dataset.title||'',headline:(s.querySelector('h1,h2')||{}).textContent||''}))})}});
-    mc?.registerTool({name:'get_slide',description:'Return the visible text of one slide by id or 1-based number.',inputSchema:{type:'object',properties:{slide:{type:'string'}},required:['slide']},annotations:ro,async execute({slide}){const s=document.getElementById(slide)||slides[(+slide||0)-1];return text(s?s.innerText:'No such slide')}});
+    mc?.registerTool({name:'get_slide',description:'Return the visible text of one slide by id or 1-based number.',inputSchema:{type:'object',properties:{slide:{type:'string'}},required:['slide']},annotations:ro,async execute(/** @type {{slide:string}} */ {slide}){const s=document.getElementById(slide)||slides[(+slide||0)-1];return text(s?s.innerText:'No such slide')}});
   }
   return {svg,linear,ticks,esc,data,chart,hover,paint,boot,audit,registerTools,go,next,prev,slides};
 })();

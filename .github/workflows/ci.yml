@@ -28,6 +28,19 @@ jobs:
       - name: Test the linter
         run: node --test skill-sharpening/scripts/verify-collection.test.mjs
 
+  typecheck:
+    name: Type-check JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned TypeScript, and the eval runner's SDK for its types
+        run: npm ci && npm ci --prefix skill-sharpening/evals
+      - name: Type check
+        run: npm run typecheck
+
   poteto-tools:
     name: Test Poteto Mode tools
     runs-on: ubuntu-latest
