@@ -71,7 +71,7 @@ node skill-sharpening/scripts/verify-collection.mjs
 
 It lints the collection: frontmatter, names, description and entrypoint limits, local links, `agents/openai.yaml`, router and provenance coverage. Errors fail the run; warnings print. It reads only; it changes nothing.
 
-Evals check that skills work when a model uses them: that a request loads the right skill, and that a loaded skill changes the reply as intended. They call the Anthropic API, so they cost money and run by hand. [Linting and evals](skill-sharpening/references/linting-and-evals.md) explains both, every lint rule, and how to add eval cases.
+Evals check that skills work when a model uses them: that a request loads the right skill, and that a loaded skill changes the reply as intended. They run by hand, through the Anthropic API with an API key, or through the local `claude -p` on a Claude subscription (`--backend claude-cli`). [Linting and evals](skill-sharpening/references/linting-and-evals.md) explains both, every lint rule, and how to add eval cases.
 
 To exercise the Poteto Mode helpers without changing the toolchain:
 
@@ -88,4 +88,4 @@ bun test orch watch-pr
 bun run typecheck
 ```
 
-The [CI workflow](.github/workflows/ci.yml) runs the collection linter, the eval file check, the JavaScript type check, and the Poteto Mode tests and type checker on every push to `main` and every pull request. The [Evals workflow](.github/workflows/evals.yml) runs the paid evals when started by hand.
+The [CI workflow](.github/workflows/ci.yml) runs the collection linter, the eval file check, the JavaScript type check, and the Poteto Mode tests and type checker on every push to `main` and every pull request. The [Evals workflow](.github/workflows/evals.yml) runs the paid API evals when started by hand.

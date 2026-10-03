@@ -1,0 +1,30 @@
+{
+  "skill": "ste100",
+  "cases": [
+    {
+      "id": "ste100-status-update",
+      "prompt": "Write the status section of the PR description from these notes: we've been migrating the auth service to the new token library. It's mostly done, 14 of 16 endpoints moved. There's a flaky test, `token_refresh_test`, that's been failing on CI and we think it's caused by clock skew on the runners. We'll circle back on it tomorrow.",
+      "assertions": [
+        "The first sentence gives the main result: the state of the migration (for example that 14 of 16 endpoints use the new token library).",
+        "The reply contains no contractions (such as \"we've\", \"it's\", \"there's\" or \"we'll\").",
+        "The reply contains no verb in the -ing form, such as \"migrating\" or \"failing\"; a technical name or code identifier does not count.",
+        "The reply contains no idiom or slang such as \"circle back\" or \"mostly done\".",
+        "The reply contains no semicolon.",
+        "No sentence in the reply has more than 25 words.",
+        "The test name `token_refresh_test` appears unchanged."
+      ]
+    },
+    {
+      "id": "ste100-rewrite-procedure",
+      "prompt": "Rewrite this troubleshooting step for our docs, which must be in Simplified Technical English:\n\nIf you're seeing `ECONNRESET` errors, it's likely that the proxy has been dropping idle connections; you'll want to bump `keepAliveTimeout` in `server.config.js` and then kick off a fresh deploy.",
+      "assertions": [
+        "The identifiers `ECONNRESET`, `keepAliveTimeout` and `server.config.js` appear unchanged.",
+        "The rewrite contains no contraction and no semicolon.",
+        "The rewrite contains no verb in the -ing form (such as \"seeing\" or \"dropping\") and no complex tense such as \"has been dropping\".",
+        "The phrasal verbs or slang \"bump\" and \"kick off\" are replaced by single plain verbs such as \"increase\" and \"start\".",
+        "The actions are imperative instructions with one instruction in each sentence, so the change to `keepAliveTimeout` and the deploy are separate sentences or list items.",
+        "The condition about `ECONNRESET` errors comes before the instructions it applies to."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "skill": "writing-for-agents",
+  "cases": [
+    {
+      "id": "wfa-pointer-placement",
+      "prompt": "Add something to our AGENTS.md so agents know about docs/testing.md, which explains how to run the integration tests against the local Postgres container. Current AGENTS.md:\n\n# Agents\nStart at SKILLS.md: it maps each task to the playbook that owns it.\n",
+      "assertions": [
+        "The reply puts the pointer to docs/testing.md in the SKILLS.md router rather than as a new line in AGENTS.md, or explains that AGENTS.md should keep its one pointer to the router.",
+        "The pointer's wording states when to read docs/testing.md, such as when running, writing or debugging integration tests.",
+        "The reply does not copy the content of docs/testing.md (Postgres container commands or setup steps) into AGENTS.md or SKILLS.md."
+      ]
+    },
+    {
+      "id": "wfa-negation-rewrite",
+      "prompt": "Tighten this rule from one of our skills:\n\nDon't write long comments. Never explain what the code does line by line. Don't add comments that just restate the code. Comments should be good.",
+      "assertions": [
+        "The rewrite states the wanted behaviour positively, for example \"write one-line comments that say why\".",
+        "The rewrite contains at most one prohibition (\"don't\", \"never\" or \"do not\").",
+        "The rewrite removes \"Comments should be good\" or replaces it with a concrete rule, or the reply calls it a no-op.",
+        "The two rules about explaining or restating what the code does become one rule."
+      ]
+    }
+  ]
+}

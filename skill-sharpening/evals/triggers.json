@@ -226,6 +226,13 @@
       ]
     },
     {
+      "id": "ste100",
+      "prompt": "Our maintenance manual must follow ASD-STE100. Check this paragraph and rewrite the sentences that break the rules.",
+      "expect": [
+        "ste100"
+      ]
+    },
+    {
       "id": "tech-writing",
       "prompt": "Write the README section explaining how to configure the CLI.",
       "expect": [
