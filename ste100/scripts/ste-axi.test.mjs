@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { checkText, isInstruction, main } from "./ste-axi.mjs";
+import { checkText, isInstruction, main, sentences } from "./ste-axi.mjs";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "ste-axi.mjs");
 
@@ -99,6 +99,25 @@ test("the lines of one quoted paragraph are one unit, and an empty quote line en
   const rest = long.split(" ").slice(12).join(" ");
   assert.deepEqual(rules(`> ${half}\n> ${rest}\n`), ["1:long-descriptive:30 words, max 25"]);
   assert.deepEqual(rules(`> ${half}.\n>\n> ${rest}\n`), []);
+});
+
+test("a ., ! or ? before closing marks ends the sentence", () => {
+  assert.deepEqual(sentences("**Done.** Run the test. (See the log.) It's \u2018fine.\u2019 Stop!_ Go.").map((x) => x.text), [
+    "**Done.**",
+    "Run the test.",
+    "(See the log.)",
+    "It's \u2018fine.\u2019",
+    "Stop!_",
+    "Go.",
+  ]);
+  const steps = "Run the test " + "and the next test ".repeat(4) + "now please.";
+  assert.deepEqual(rules(`**Done.** ${steps}`), ["1:long-instruction:21 words, max 20"]);
+});
+
+test("a list item or a heading in a quote starts a new unit", () => {
+  const item = "> - Fix the flagged line of the report";
+  assert.deepEqual(rules([item, item, item].join("\n")), []);
+  assert.equal(checkText("> ## Heading here\n> The test failed.\n", "t.md").sentences, 2);
 });
 
 test("an indented paragraph in a list item is prose, indented code after a paragraph is not", () => {

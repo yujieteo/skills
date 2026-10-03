@@ -155,19 +155,20 @@ export function proseUnits(source) {
       }
       continue;
     }
-    const block = /^\s*(?:#{1,6}\s+|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+|>\s*)/.exec(text);
-    if (block) {
-      const quote = block[0].trim().startsWith(">");
-      if (!(quote && quoted)) flush();
+    const block = /^\s*(>\s*)?(#{1,6}\s+|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)?/.exec(text);
+    if (block && (block[1] || block[2])) {
+      const quote = !!block[1];
+      const marker = block[2] ?? "";
+      if (!(quote && quoted && !marker)) flush();
       if (quote && !text.slice(block[0].length).trim()) {
         flush();
         continue;
       }
-      if (/^[-*+\d]/.test(block[0].trim())) list = true;
+      if (/^[-*+\d]/.test(marker)) list = true;
       const pad = " ".repeat(block[0].length);
       append(pad + text.slice(block[0].length), pad + raw.slice(block[0].length), line);
       quoted = quote;
-      if (/^\s*#/.test(raw)) flush();
+      if (marker.startsWith("#")) flush();
       continue;
     }
     append(text, raw, line);
@@ -178,12 +179,13 @@ export function proseUnits(source) {
 
 /** @typedef {{ text: string, start: number }} Sentence */
 
-// Splits a unit into sentences at ., ! or ? before a space or the end. A ., ! or ? in a word stays in its sentence.
+// Splits a unit into sentences at ., ! or ? before a space or the end, also with closing marks such as ), ** or a
+// quote between. A ., ! or ? in a word stays in its sentence.
 /** @param {string} text @returns {Sentence[]} */
 export function sentences(text) {
   /** @type {Sentence[]} */
   const out = [];
-  const re = /(?:[^.!?]|[.!?](?!\s|$))+(?:[.!?]+(?=\s|$))?|[.!?]+/g;
+  const re = /(?:[^.!?]|[.!?](?![.!?]*[)\]"'’”*_]*(?:\s|$)))+(?:[.!?]+[)\]"'’”*_]*(?=\s|$))?|[.!?]+[)\]"'’”*_]*/g;
   let m;
   while ((m = re.exec(text))) {
     if (!m[0]) break;
