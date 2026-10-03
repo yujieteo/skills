@@ -101,7 +101,7 @@ Script and asset paths below are relative to this skill's directory.
      `→` shows the next step before advancing.
 7. **Check in a real browser, then fix and repeat.** Run
    `node scripts/check-deck.mjs decks/<slug>/index.html`. Serve the folder over
-   HTTP (`python3 -m http.server`), open it at `http://localhost:8000/` (notes load only from localhost) with `chrome-devtools-axi`, set the
+   HTTP (`python3 -m http.server`), open it at `http://localhost:8000/` (notes load only from localhost, not from `[::]` or `0.0.0.0`) with `chrome-devtools-axi`, set the
    viewport with `emulate --viewport 1920x1080x1`, and:
    - for each slide, `eval "Deck.go(N-1, 99)"`, take a screenshot, and read it:
      headline fits, no orphan word, labels legible and unclipped, legend

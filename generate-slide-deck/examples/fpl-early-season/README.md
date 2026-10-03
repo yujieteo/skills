@@ -17,11 +17,14 @@ Intended site path: `decks/fpl-early-season/index.html`, copied verbatim, as
 
 ## View it
 
-Serve the folder over HTTP so the notes load, then open the printed address:
+Serve the folder over HTTP so the notes load:
 
 ```sh
 python3 -m http.server 8000
 ```
+
+Open `http://localhost:8000/`. Notes load only from localhost, not from the
+`[::]` or `0.0.0.0` address the server prints.
 
 `→` and `←` move, `N` shows notes, `P` opens the presenter window, `?` lists
 the keys.

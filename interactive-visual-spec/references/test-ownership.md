@@ -1,6 +1,6 @@
 # Test ownership and CI
 
-Part of the [canonical interactive visual specification](../SKILL.md): which repository owns which test, and how CI layers. Sections 26 to 37, in the specification's own wording and numbering. Nothing here is weakened or added; where a skill disagrees, this text governs.
+Part of the [canonical interactive visual specification](../SKILL.md): which repository owns which test, and how CI layers. Sections 26 to 37, in the specification's own wording and numbering. Two parts are local additions, not the specification's wording: the section "Where the layers live", and the ownership-rule sentence in "Why three layers", which names the homes that section maps. Nothing else is weakened or added; where a skill disagrees, this text governs.
 
 ## Where the layers live
 
