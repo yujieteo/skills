@@ -4,10 +4,11 @@
 // a module, so one page's top-level names never meet another's. Run by `npm run typecheck`.
 // Usage: node skill-sharpening/scripts/extract-inline.mjs <page.html> ...
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { INLINE_DIR, inlineFile } from "./typecheck.mjs";
 
 const pages = process.argv.slice(2);
 if (!pages.length) throw new Error("usage: node skill-sharpening/scripts/extract-inline.mjs <page.html> ...");
-const out = new URL("../../.typecheck/inline/", import.meta.url);
+const out = new URL(`../../${INLINE_DIR}`, import.meta.url);
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 for (const page of pages) {
@@ -20,6 +21,6 @@ for (const page of pages) {
     const line = html.slice(0, (m.index ?? 0) + m[0].indexOf(">") + 1).split("\n").length;
     parts.push(`// ${page}:${line}, <script${attrs}>`, m[2]);
   }
-  writeFileSync(new URL(`${page.replace(/[^A-Za-z0-9]+/g, "-")}.js`, out), parts.join("\n"));
+  writeFileSync(new URL(`../../${inlineFile(page)}`, import.meta.url), parts.join("\n"));
 }
 console.log(`extracted the inline scripts of ${pages.length} pages into .typecheck/inline/`);

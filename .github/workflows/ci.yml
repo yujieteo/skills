@@ -27,6 +27,8 @@ jobs:
         run: node skill-sharpening/evals/run.mjs check
       - name: Test the linter
         run: node --test skill-sharpening/scripts/verify-collection.test.mjs
+      - name: Test the type-check summary
+        run: node --test skill-sharpening/scripts/typecheck.test.mjs
 
   typecheck:
     name: Type-check JavaScript
