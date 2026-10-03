@@ -1,0 +1,20 @@
+// Type-checked JavaScript: tsc checks the JSDoc types in the collection's own .mjs scripts and tests, and in the
+// example pages' inline scripts (copied into .typecheck/inline/ by skill-sharpening/scripts/extract-inline.mjs), and
+// emits nothing. Run `npm ci && npm run typecheck`; skill-sharpening/evals needs its own `npm ci` first, for the SDK's types.
+// Left out: poteto-mode/scripts, a Bun TypeScript project with its own tsconfig and `bun run typecheck`.
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": ["*/**/*.mjs", ".typecheck/inline/*.js"],
+  "exclude": ["**/node_modules"]
+}

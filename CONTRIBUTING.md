@@ -8,7 +8,14 @@ This is a personal collection that a daily automation also edits (see `skill-sha
 node skill-sharpening/scripts/verify-collection.mjs
 ```
 
-The same check runs in CI. If you changed the linter itself, also run its tests: `node --test skill-sharpening/scripts/verify-collection.test.mjs`. If you changed a skill's description or instructions, also run its evals (they call the Anthropic API):
+If you changed any JavaScript (the `.mjs` scripts or an example page's inline scripts), also type-check it; TypeScript is a development-only tool pinned in the root `package.json`, and there is no build step or test framework:
+
+```sh
+npm ci && npm ci --prefix skill-sharpening/evals
+npm run typecheck
+```
+
+The same checks run in CI. If you changed the linter itself, also run its tests: `node --test skill-sharpening/scripts/verify-collection.test.mjs`. If you changed a skill's description or instructions, also run its evals (they call the Anthropic API):
 
 ```sh
 cd skill-sharpening/evals && npm ci

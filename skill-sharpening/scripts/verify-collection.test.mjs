@@ -13,10 +13,12 @@ import { lintCollection } from "./verify-collection.mjs";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "verify-collection.mjs");
 const BODY = "This body explains the workflow in enough words that the linter treats it as a real entry point for an agent.";
+/** @type {string[]} */
 const roots = [];
 after(() => roots.forEach((root) => rmSync(root, { recursive: true, force: true })));
 
 // files: { "relative/path": "content" }. Returns the fixture repository root.
+/** @param {Record<string, string>} files */
 function collection(files) {
   const root = mkdtempSync(join(tmpdir(), "skills-lint-"));
   roots.push(root);
@@ -27,14 +29,19 @@ function collection(files) {
   return root;
 }
 
-const skill = (name, description = `Use when testing the ${name} fixture.`, body = BODY) =>
+const skill = (/** @type {string} */ name, description = `Use when testing the ${name} fixture.`, body = BODY) =>
   `---\nname: ${name}\ndescription: ${description}\n---\n\n${body}\n`;
-const router = (...names) => `---\nname: skills-router\ndescription: Use when choosing a skill.\n---\n\n${BODY}\n\n| Task | Skill |\n| --- | --- |\n${names.map((n) => `| x | \`${n}\` |`).join("\n")}\n`;
-const rules = (findings) => findings.map((f) => `${f.rule} ${f.file}`);
+const router = (/** @type {string[]} */ ...names) => `---\nname: skills-router\ndescription: Use when choosing a skill.\n---\n\n${BODY}\n\n| Task | Skill |\n| --- | --- |\n${names.map((n) => `| x | \`${n}\` |`).join("\n")}\n`;
+const rules = (/** @type {{ rule: string, file: string }[]} */ findings) => findings.map((f) => `${f.rule} ${f.file}`);
 
 test("a clean collection has no findings", () => {
   const root = collection({ "alpha/SKILL.md": skill("alpha"), "skills-router/SKILL.md": router("alpha"), "PROVENANCE.md": "`alpha` `skills-router`\n" });
   assert.deepEqual(lintCollection(root), { skillCount: 2, errors: [], warnings: [] });
+});
+
+test("an installed node_modules at the top level is not a skill directory", () => {
+  const root = collection({ "alpha/SKILL.md": skill("alpha"), "skills-router/SKILL.md": router("alpha"), "PROVENANCE.md": "`alpha` `skills-router`\n", "node_modules/typescript/package.json": "{}" });
+  assert.deepEqual(lintCollection(root).errors, []);
 });
 
 test("layout, name, router and link errors are reported with their rules", () => {
@@ -104,11 +111,14 @@ test("agents/openai.yaml accepts known keys and rejects unknown or invalid ones"
 });
 
 test("the CLI fails on errors, and on warnings only under --strict", () => {
+  /** @param {string} root @param {string[]} args */
   const run = (root, ...args) => {
     try {
       return { code: 0, out: execFileSync("node", [SCRIPT, root, ...args], { encoding: "utf8", stdio: "pipe" }) };
     } catch (failure) {
-      return { code: failure.status, out: failure.stdout };
+      // execFileSync throws an Error carrying the exit status and the captured output.
+      const { status, stdout } = /** @type {{ status: number, stdout: string }} */ (failure);
+      return { code: status, out: stdout };
     }
   };
   const warnOnly = collection({ "alpha/SKILL.md": skill("alpha", "No trigger words here.") });

@@ -215,29 +215,43 @@ body.presenter #notes{display:block;position:absolute;right:0;top:0;bottom:0;wid
 <script>
 /* ===== Deck runtime: navigation, scaling, notes, presenter sync, audit. Do not edit per deck. ===== */
 document.documentElement.classList.add('js');
+/** @typedef {{label:string,text:string,items:string[]}} NoteField */
+/** @typedef {{id:string,fields:NoteField[]}} NoteSection */
+/** @typedef {{root:SVGSVGElement,w:number,h:number,m:{t:number,r:number,b:number,l:number},iw:number,ih:number}} Chart */
 const Deck=(()=>{
-  const $=s=>document.querySelector(s), stage=$('#stage'), tip=$('#tip'), notesEl=$('#notes');
-  const slides=[...stage.querySelectorAll('.slide')];
+  /* The shell's own elements, and the chart hosts a deck names, are in the page. */
+  const $=(/** @type {string} */ s)=>/** @type {HTMLElement} */ (document.querySelector(s)), stage=$('#stage'), tip=$('#tip'), notesEl=$('#notes');
+  const slides=/** @type {HTMLElement[]} */ ([...stage.querySelectorAll('.slide')]);
   const params=new URLSearchParams(location.search);
   const presenter=params.has('presenter');
-  let i=0, step=0, scale=1, notes=null, notesOpen=false, t0=Date.now(), channel=null;
+  let i=0, step=0, scale=1, notesOpen=false, t0=Date.now();
+  /** @type {{sections:Record<string,NoteSection>,order:string[]}|null} */
+  let notes=null;
+  /** @type {BroadcastChannel|null} */
+  let channel=null;
   const NS='http://www.w3.org/2000/svg';
   if(presenter)document.body.classList.add('presenter');
 
   /* --- chart helpers --- */
-  const svg=(tag,attrs={},...kids)=>{const n=document.createElementNS(NS,tag);for(const k in attrs)if(attrs[k]!=null)n.setAttribute(k,attrs[k]);for(const c of kids.flat())n.append(c.nodeType?c:document.createTextNode(c));return n};
-  const linear=(d0,d1,r0,r1)=>{const f=v=>r0+(v-d0)/(d1-d0)*(r1-r0);f.domain=[d0,d1];f.range=[r0,r1];return f};
-  const ticks=(a,b,n=5)=>{const raw=(b-a)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,s=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p,out=[];for(let v=Math.ceil(a/s)*s;v<=b+1e-9;v+=s)out.push(+v.toFixed(10));return out};
-  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  /** @type {(tag:string,attrs?:Record<string,unknown>,...kids:(Node|string|number|(Node|string|number)[])[])=>SVGElement} */
+  const svg=(tag,attrs={},...kids)=>{const n=document.createElementNS(NS,tag);for(const k in attrs)if(attrs[k]!=null)n.setAttribute(k,String(attrs[k]));for(const c of kids.flat())n.append(typeof c==='object'&&c.nodeType?c:document.createTextNode(String(c)));return /** @type {SVGElement} */ (n)};
+  /** A linear scale from [d0,d1] to [r0,r1], carrying its domain and range. @type {(d0:number,d1:number,r0:number,r1:number)=>((v:number)=>number)&{domain:number[],range:number[]}} */
+  const linear=(d0,d1,r0,r1)=>{const f=Object.assign((/** @type {number} */ v)=>r0+(v-d0)/(d1-d0)*(r1-r0),{domain:[d0,d1],range:[r0,r1]});return f};
+  const ticks=(/** @type {number} */ a,/** @type {number} */ b,n=5)=>{/** @type {number[]} */ const out=[];const raw=(b-a)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,s=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;for(let v=Math.ceil(a/s)*s;v<=b+1e-9;v+=s)out.push(+v.toFixed(10));return out};
+  /** @type {Record<string,string>} */
+  const ENTITIES={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+  const esc=(/** @type {unknown} */ s)=>String(s).replace(/[&<>"']/g,c=>ENTITIES[c]);
   const data=()=>JSON.parse($('#deck-data').textContent||'{}');
   /* Chart: returns {root, x, y} for an svg sized exactly to its container, in stage pixels. */
+  /** @param {string|HTMLElement} host @param {{margin?:Chart['m']}} [options] @returns {Chart} */
   const chart=(host,{margin={t:20,r:30,b:70,l:90}}={})=>{
     const el=typeof host==='string'?$(host):host, w=Math.round(el.clientWidth), h=Math.round(el.clientHeight);
-    const root=svg('svg',{viewBox:`0 0 ${w} ${h}`,width:w,height:h,role:'img'});
+    const root=/** @type {SVGSVGElement} */ (svg('svg',{viewBox:`0 0 ${w} ${h}`,width:w,height:h,role:'img'}));
     el.replaceChildren(root);
     return {root,w,h,m:margin,iw:w-margin.l-margin.r,ih:h-margin.t-margin.b};
   };
-  const hover=(el,html)=>{el.setAttribute('tabindex','0');const on=()=>showTip(el,html),off=()=>tip.classList.remove('on');el.addEventListener('mouseenter',on);el.addEventListener('focus',on);el.addEventListener('mouseleave',off);el.addEventListener('blur',off)};
+  const hover=(/** @type {Element} */ el,/** @type {string} */ html)=>{el.setAttribute('tabindex','0');const on=()=>showTip(el,html),off=()=>tip.classList.remove('on');el.addEventListener('mouseenter',on);el.addEventListener('focus',on);el.addEventListener('mouseleave',off);el.addEventListener('blur',off)};
+  /** @param {Element} el @param {string} html */
   function showTip(el,html){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();tip.innerHTML=html;tip.classList.add('on');tip.style.left=Math.max(160,Math.min(1760,(r.left+r.width/2-s.left)/scale))+'px';tip.style.top=Math.max(60,(r.top-s.top)/scale)+'px'}
 
   /* --- layout --- */
@@ -259,10 +273,10 @@ const Deck=(()=>{
   }
 
   /* --- navigation --- */
-  const maxStep=s=>Math.max(0,...[...s.querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0));
+  const maxStep=(/** @type {Element} */ s)=>Math.max(0,...[.../** @type {NodeListOf<HTMLElement>} */ (s.querySelectorAll('[data-step]'))].map(e=>+(e.dataset.step??0)||0));
   function render(){
     slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.setAttribute('aria-hidden',k===i?'false':'true')});
-    slides[i].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));
+    /** @type {NodeListOf<HTMLElement>} */ (slides[i].querySelectorAll('[data-step]')).forEach(e=>e.classList.toggle('shown',(+(e.dataset.step??0)||0)<=step));
     $('#count').textContent=`${i+1} / ${slides.length}`;
     $('#bar').style.width=((i+1)/slides.length*100)+'%';
     tip.classList.remove('on');
@@ -270,6 +284,7 @@ const Deck=(()=>{
     renderNotes();
   }
   const docTitle=document.title;
+  /** @param {number} n @param {number} [st] @param {boolean} [fromSync] */
   function go(n,st=0,fromSync=false){
     i=Math.max(0,Math.min(slides.length-1,n));step=Math.min(st,maxStep(slides[i]));
     history.replaceState(null,'','#'+(i+1)); render();
@@ -279,9 +294,15 @@ const Deck=(()=>{
   const prev=()=>{step>0?go(i,step-1):i>0&&go(i-1,maxStep(slides[i-1]))};
 
   /* --- notes: sidecar notes.md, parsed in the browser. Missing file = no notes, deck still works. --- */
-  const inline=t=>esc(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const inline=(/** @type {string} */ t)=>esc(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  /** @param {string} md */
   function parseNotes(md){
-    const out={sections:{},order:[]};let cur=null,field=null;
+    /** @type {{sections:Record<string,NoteSection>,order:string[]}} */
+    const out={sections:{},order:[]};
+    /** @type {NoteSection|null} */
+    let cur=null;
+    /** @type {NoteField|null} */
+    let field=null;
     for(const line of md.split('\n')){
       const h=line.match(/^##\s+(\S+)\s*$/);
       if(h){cur={id:h[1],fields:[]};out.sections[cur.id]=cur;out.order.push(cur.id);field=null;continue}
@@ -294,6 +315,7 @@ const Deck=(()=>{
     }
     return out;
   }
+  /** @param {NoteField} f */
   function fieldHtml(f){return `<div class="field"><b>${esc(f.label)}</b>${f.text?`<div>${inline(f.text)}</div>`:''}${f.items.length?`<ul>${f.items.map(x=>`<li>${inline(x)}</li>`).join('')}</ul>`:''}</div>`}
   function renderNotes(){
     if(!(notesOpen||presenter))return;
@@ -327,6 +349,7 @@ const Deck=(()=>{
     else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.()}
     else if(k==='?')help.classList.add('on');
   });
+  /** @type {number|null} */
   let tx=null;
   addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
   addEventListener('touchend',e=>{if(tx==null)return;const d=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(d)>60)d<0?next():prev()});
@@ -339,8 +362,10 @@ const Deck=(()=>{
   try{channel=new BroadcastChannel('deck:'+location.pathname);channel.onmessage=e=>go(e.data.i,e.data.step,true)}catch{}
 
   /* --- chart registry: the stage is a fixed 1920x1080 box, so each painter runs once at boot. --- */
+  /** A deck's painter draws one slide's charts from the deck's data. @typedef {(slide:HTMLElement,data:any)=>void} Painter */
+  /** @type {[string,Painter][]} */
   const painters=[];
-  const paint=(id,fn)=>painters.push([id,fn]);
+  const paint=(/** @type {string} */ id,/** @type {Painter} */ fn)=>painters.push([id,fn]);
   function boot(){
     fit();
     for(const [id,fn] of painters){const s=document.getElementById(id);if(!s)throw new Error('paint: no slide '+id);fn(s,data())}
@@ -351,11 +376,13 @@ const Deck=(()=>{
 
   /* --- audit: run from the browser console or a devtools eval. Returns a list of problems. --- */
   function audit({minText=22}={}){
-    const problems=[],sr=stage.getBoundingClientRect();
+    /** @type {string[]} */
+    const problems=[];const sr=stage.getBoundingClientRect();
     slides.forEach((s,k)=>{
       s.querySelectorAll('[data-step]').forEach(e=>e.classList.add('shown'));
       const box=s.getBoundingClientRect(),name=s.id;
       const leaves=[...s.querySelectorAll('*')].filter(e=>!e.children.length&&e.textContent.trim()&&!e.closest('#tip'));
+      /** @type {{label:string,r:DOMRect}[]} */
       const rects=[];
       for(const e of leaves){
         const cs=getComputedStyle(e);let px=parseFloat(cs.fontSize);
@@ -373,50 +400,69 @@ const Deck=(()=>{
         if(ox>2*scale&&oy>4*scale)problems.push(`${name}: "${rects[a].label}" overlaps "${rects[b].label}"`);
       }
       if(s.scrollHeight>s.clientHeight+2)problems.push(`${name}: content taller than the slide`);
-      s.querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step&&k===i));
+      /** @type {NodeListOf<HTMLElement>} */ (s.querySelectorAll('[data-step]')).forEach(e=>e.classList.toggle('shown',(+(e.dataset.step??0)||0)<=step&&k===i));
     });
     return problems;
   }
 
   /* --- WebMCP: read-only, same baseline as generate-visualization. Notes are never exposed. --- */
+  /** @param {Record<string,unknown>} meta deck-level metadata: source, source_url, fetched */
   function registerTools(meta){
-    const mc=(typeof document!=='undefined'&&document.modelContext)||(typeof navigator!=='undefined'&&navigator.modelContext);
-    const text=v=>({content:[{type:'text',text:typeof v==='string'?v:JSON.stringify(v)}]});
+    /* WebMCP is not yet in the DOM types. */
+    /** @type {{registerTool(tool:{name:string,description:string,inputSchema:object,annotations:object,execute(input:any):Promise<object>}):void}|undefined} */
+    const mc=(typeof document!=='undefined'&&/** @type {any} */ (document).modelContext)||(typeof navigator!=='undefined'&&/** @type {any} */ (navigator).modelContext);
+    const text=(/** @type {unknown} */ v)=>({content:[{type:'text',text:typeof v==='string'?v:JSON.stringify(v)}]});
     const ro={readOnlyHint:true},empty={type:'object',properties:{}};
     mc?.registerTool({name:'get_data',description:'Return the full dataset embedded in this deck.',inputSchema:empty,annotations:ro,async execute(){return text(data())}});
     mc?.registerTool({name:'get_metadata',description:'Deck title, sources, fetch date and the slide list with ids and headlines.',inputSchema:empty,annotations:ro,async execute(){return text({title:docTitle,...meta,slides:slides.map((s,k)=>({n:k+1,id:s.id,title:s.dataset.title||'',headline:(s.querySelector('h1,h2')||{}).textContent||''}))})}});
-    mc?.registerTool({name:'get_slide',description:'Return the visible text of one slide by id or 1-based number.',inputSchema:{type:'object',properties:{slide:{type:'string'}},required:['slide']},annotations:ro,async execute({slide}){const s=document.getElementById(slide)||slides[(+slide||0)-1];return text(s?s.innerText:'No such slide')}});
+    mc?.registerTool({name:'get_slide',description:'Return the visible text of one slide by id or 1-based number.',inputSchema:{type:'object',properties:{slide:{type:'string'}},required:['slide']},annotations:ro,async execute(/** @type {{slide:string}} */ {slide}){const s=document.getElementById(slide)||slides[(+slide||0)-1];return text(s?s.innerText:'No such slide')}});
   }
   return {svg,linear,ticks,esc,data,chart,hover,paint,boot,audit,registerTools,go,next,prev,slides};
 })();
 </script>
 <script>
 /* ===== Deck content: chart painters and metadata. Written per deck. ===== */
-const $=s=>document.querySelector(s), S=Deck.svg, esc=Deck.esc;
-const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+/** The embedded dataset, as build-data.mjs writes it.
+ * @typedef {{n:string,t:string,p:string,c:number,pts:number,m:number,gi:number,xgi:number,f:number,own:number}} Player
+ * @typedef {{s:string,name:string,gf:number,ga:number,xgf:number,xga:number}} Team
+ * @typedef {{o:string,h:boolean,r:number}} Fixture
+ * @typedef {{fetched:string,gameweek:number,season:string,managers:number,source:string,min_minutes:number,players:Player[],teams:Team[],horizon:{first:number,rows:{s:string,d:Fixture[][]}[]}}} Data
+ */
+/** @typedef {ReturnType<typeof Deck.chart>} C */
+/** @typedef {(v:number)=>number} Scale */
+/* The slides' fill-in elements are in the page. */
+const $=(/** @type {string} */ s)=>/** @type {HTMLElement} */ (document.querySelector(s)), S=Deck.svg, esc=Deck.esc;
+const css=(/** @type {string} */ n)=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+/** @type {Record<string,string>} */
 const COL={DEF:css('--c1'),MID:css('--c2'),FWD:css('--c3'),GKP:css('--neutral')};
+/** @type {Record<string,string>} */
 const POSNAME={DEF:'Defenders',MID:'Midfielders',FWD:'Forwards',GKP:'Goalkeepers'};
 const RED=css('--selected'),BLUE=css('--c1'),GREY=css('--neutral');
-const gm=v=>'£'+v.toFixed(1)+'m';
-const legendPos=id=>{$(id).innerHTML=Object.keys(COL).map(k=>`<span><i style="background:${COL[k]}"></i>${POSNAME[k]}</span>`).join('')};
+const gm=(/** @type {number} */ v)=>'£'+v.toFixed(1)+'m';
+const legendPos=(/** @type {string} */ id)=>{$(id).innerHTML=Object.keys(COL).map(k=>`<span><i style="background:${COL[k]}"></i>${POSNAME[k]}</span>`).join('')};
+/** @type {(x:number,y:number,cls:string,txt:string|number,extra?:Record<string,unknown>)=>SVGElement} */
 const T=(x,y,cls,txt,extra={})=>S('text',{x,y,class:cls,...extra},txt);
+/** @type {(c:C,x:Scale,ticks:number[],label:string,f?:(v:number)=>string|number)=>void} */
 const axisX=(c,x,ticks,label,f=v=>v)=>{ticks.forEach(v=>{c.root.append(S('line',{class:'grid',x1:x(v),x2:x(v),y1:c.m.t,y2:c.m.t+c.ih}),T(x(v),c.m.t+c.ih+34,'axis',f(v),{'text-anchor':'middle'}))});
   if(label)c.root.append(T(c.m.l+c.iw/2,c.h-8,'ttl',label,{'text-anchor':'middle'}))};
+/** @type {(c:C,y:Scale,ticks:number[],label:string,f?:(v:number)=>string|number)=>void} */
 const axisY=(c,y,ticks,label,f=v=>v)=>{ticks.forEach(v=>{c.root.append(S('line',{class:'grid',x1:c.m.l,x2:c.m.l+c.iw,y1:y(v),y2:y(v)}),T(c.m.l-14,y(v)+8,'axis',f(v),{'text-anchor':'end'}))});
   if(label)c.root.append(T(24,c.m.t+c.ih/2,'ttl',label,{'text-anchor':'middle',transform:`rotate(-90 24 ${c.m.t+c.ih/2})`}))};
+/** @type {(c:C,cx:number,cy:number,r:number,fill:string,html:string)=>SVGElement} */
 const dot=(c,cx,cy,r,fill,html)=>{const d=S('circle',{class:'mark',cx,cy,r,fill,stroke:'#fff','stroke-width':2,'fill-opacity':.9});Deck.hover(d,html);c.root.append(d);return d};
+/** @type {(c:C,x:number,y:number,txt:string|number,anchor?:string,cls?:string)=>void} */
 const label=(c,x,y,txt,anchor='start',cls='lbl')=>c.root.append(T(x,y,cls,txt,{'text-anchor':anchor}));
 
 /* s02: frame */
-Deck.paint('s02-frame',(s,d)=>{
+Deck.paint('s02-frame',(s,/** @type {Data} */ d)=>{
   $('#fill-managers').textContent=(d.managers/1e6).toFixed(2)+'M';
-  $('#fill-players').textContent=d.players.length;
+  $('#fill-players').textContent=String(d.players.length);
   $('#fill-fetched').textContent=d.fetched;
 });
-Deck.paint('s11-sources',(s,d)=>{$('#fill-fetched2').textContent=d.fetched});
+Deck.paint('s11-sources',(s,/** @type {Data} */ d)=>{$('#fill-fetched2').textContent=d.fetched});
 
 /* s03: top 15 scorers */
-Deck.paint('s03-top-scorers',(s,d)=>{
+Deck.paint('s03-top-scorers',(s,/** @type {Data} */ d)=>{
   legendPos('#legend-pos');
   const rows=[...d.players].sort((a,b)=>b.pts-a.pts||b.m-a.m).slice(0,15);
   const c=Deck.chart('#chart-top',{margin:{t:6,r:170,b:64,l:250}});
@@ -435,7 +481,7 @@ Deck.paint('s03-top-scorers',(s,d)=>{
 });
 
 /* s04: value scatter */
-Deck.paint('s04-value',(s,d)=>{
+Deck.paint('s04-value',(s,/** @type {Data} */ d)=>{
   legendPos('#legend-pos2');
   const c=Deck.chart('#chart-value',{margin:{t:14,r:40,b:74,l:100}});
   const x=Deck.linear(4,16,c.m.l,c.m.l+c.iw), y=Deck.linear(0,50,c.m.t+c.ih,c.m.t);
@@ -443,15 +489,18 @@ Deck.paint('s04-value',(s,d)=>{
   axisY(c,y,[0,10,20,30,40,50],'Total points');
   c.root.append(S('line',{x1:x(4),y1:y(24),x2:x(50/6),y2:y(50),stroke:'#6e6e73','stroke-width':2,'stroke-dasharray':'8 8'}));
   label(c,x(50/6)+14,y(50)+24,'6 points per £m','start','axis');
+  /** @type {Record<string,number>} */
   const order={GKP:0,MID:1,FWD:2,DEF:3};
   [...d.players].sort((a,b)=>order[a.p]-order[b.p]).forEach(p=>dot(c,x(p.c),y(p.pts),p.p==='DEF'?10:8,COL[p.p],`<b>${esc(p.n)}</b> (${p.t}, ${p.p})<br>${p.pts} points · ${gm(p.c)}<br>${(p.pts/p.c).toFixed(1)} points per £m`));
+  /** @type {Record<string,[string,number,number]>} */
   const at={Bogle:['end',-16,-8],'Groß':['end',-16,6],'De Cuyper':['end',-16,14],Tarkowski:['start',16,-6],Tzolakis:['end',-16,8],Gvardiol:['start',16,10],Haaland:['end',-16,-14]};
   d.players.filter(p=>at[p.n]).forEach(p=>{const [a,dx,dy]=at[p.n];label(c,x(p.c)+dx,y(p.pts)+dy,p.n,a,'lbl-strong')});
 });
 
 /* s05: defence luck, two panels */
-Deck.paint('s05-defence-luck',(s,d)=>{
+Deck.paint('s05-defence-luck',(s,/** @type {Data} */ d)=>{
   const list=d.teams.map(t=>({...t,gap:t.ga-t.xga})).sort((a,b)=>a.gap-b.gap);
+  /** @type {Record<string,string>} */
   const notes={MCI:'Gvardiol',EVE:'Tarkowski',BHA:'De Cuyper, Vušković',LEE:'Bogle'};
   const c=Deck.chart('#chart-defence',{margin:{t:8,r:10,b:84,l:0}});
   const panelW=(c.iw-80)/2, pitch=c.ih/10;
@@ -473,13 +522,14 @@ Deck.paint('s05-defence-luck',(s,d)=>{
 });
 
 /* s06: attack luck */
-Deck.paint('s06-attack-luck',(s,d)=>{
+Deck.paint('s06-attack-luck',(s,/** @type {Data} */ d)=>{
   const c=Deck.chart('#chart-attack',{margin:{t:14,r:40,b:74,l:100}});
   const x=Deck.linear(3,13,c.m.l,c.m.l+c.iw), y=Deck.linear(0,18,c.m.t+c.ih,c.m.t);
   axisX(c,x,[4,6,8,10,12],'Expected goals');
   axisY(c,y,[0,4,8,12,16],'Goals scored');
   c.root.append(S('line',{x1:x(3),y1:y(3),x2:x(13),y2:y(13),stroke:'#6e6e73','stroke-width':2,'stroke-dasharray':'8 8'}));
   label(c,x(12.9),y(12.9)+66,'goals = expected','end','axis');
+  /** @type {Record<string,[string,number,number]>} */
   const at={BHA:['end',-16,8],NEW:['end',-16,8],CHE:['start',16,8],MCI:['start',16,-4],COV:['end',-16,8],TOT:['start',16,-2],SUN:['start',16,8],NFO:['end',-16,10],FUL:['start',16,10],MUN:['start',16,10]};
   d.teams.forEach(t=>{
     const gap=t.gf-t.xgf,col=gap>=2?RED:gap<=-2?BLUE:GREY;
@@ -489,7 +539,7 @@ Deck.paint('s06-attack-luck',(s,d)=>{
 });
 
 /* s07: player xGI gap */
-Deck.paint('s07-player-gap',(s,d)=>{
+Deck.paint('s07-player-gap',(s,/** @type {Data} */ d)=>{
   const pool=d.players.filter(p=>p.p!=='GKP').map(p=>({...p,gap:p.gi-p.xgi})).sort((a,b)=>b.gap-a.gap);
   const rows=[...pool.slice(0,7),...pool.slice(-7)];
   const c=Deck.chart('#chart-gap',{margin:{t:8,r:250,b:84,l:250}});
@@ -507,24 +557,26 @@ Deck.paint('s07-player-gap',(s,d)=>{
 });
 
 /* s08: ownership vs form */
-Deck.paint('s08-ownership',(s,d)=>{
+Deck.paint('s08-ownership',(s,/** @type {Data} */ d)=>{
   const c=Deck.chart('#chart-own',{margin:{t:14,r:40,b:74,l:100}});
   const x=Deck.linear(0,80,c.m.l,c.m.l+c.iw), y=Deck.linear(0,12,c.m.t+c.ih,c.m.t);
   axisX(c,x,[0,20,40,60,80],'Owned by (% of managers)',v=>v+'%');
   axisY(c,y,[0,3,6,9,12],'Form');
   const pool=d.players.filter(p=>p.p!=='GKP');
-  const kind=p=>p.f>=7.5&&p.own<20?'hot':p.f<=4&&p.own>25?'cold':'rest';
+  const kind=(/** @type {Player} */ p)=>p.f>=7.5&&p.own<20?'hot':p.f<=4&&p.own>25?'cold':'rest';
   const colr={hot:BLUE,cold:RED,rest:GREY};
   [...pool].sort((a,b)=>(kind(a)==='rest'?0:1)-(kind(b)==='rest'?0:1)).forEach(p=>{
     const k=kind(p);
-    dot(c,x(p.own),y(p.f),k==='rest'?7:10,colr[k],`<b>${esc(p.n)}</b> (${p.t})<br>form ${p.f.toFixed(1)} · owned by ${p.own}%`).setAttribute('fill-opacity',k==='rest'?.5:.95);
+    dot(c,x(p.own),y(p.f),k==='rest'?7:10,colr[k],`<b>${esc(p.n)}</b> (${p.t})<br>form ${p.f.toFixed(1)} · owned by ${p.own}%`).setAttribute('fill-opacity',String(k==='rest'?.5:.95));
   });
+  /** @type {Record<string,[string,number,number]>} */
   const at={Bogle:['end',-16,-10],Schade:['middle',0,-20],Mitchell:['end',-18,-14],Semenyo:['start',16,-2],Tarkowski:['start',16,16],Szoboszlai:['start',16,8],Palmer:['end',-16,8],Cherki:['start',16,-6],'Groß':['start',16,8],Haaland:['end',-16,-14]};
   pool.filter(p=>at[p.n]).forEach(p=>{const [a,dx,dy]=at[p.n];label(c,x(p.own)+dx,y(p.f)+dy,p.n,a,'lbl-strong')});
 });
 
 /* s09: fixtures heatmap, easier half and harder half */
-Deck.paint('s09-fixtures',(s,d)=>{
+Deck.paint('s09-fixtures',(s,/** @type {Data} */ d)=>{
+  /** @type {Record<number,[string,string]>} */
   const ramp={2:['#e3eefb','#1d1d1f'],3:['#a9c9f3','#1d1d1f'],4:['#3f7fd0','#ffffff'],5:['#1b4a91','#ffffff']};
   $('#legend-fix').innerHTML=[2,3,4,5].map(v=>`<span><i style="background:${ramp[v][0]};border-radius:4px"></i>${v}${v===2?' easiest':v===5?' hardest':''}</span>`).join('');
   const rows=d.horizon.rows.map(r=>{const all=r.d.flat();return {s:r.s,d:r.d,avg:all.reduce((a,f)=>a+f.r,0)/all.length}}).sort((a,b)=>a.avg-b.avg||a.s.localeCompare(b.s));
@@ -550,17 +602,18 @@ Deck.paint('s09-fixtures',(s,d)=>{
 });
 
 /* s10: the three checks, as a table */
-Deck.paint('s10-decision',(s,d)=>{
+Deck.paint('s10-decision',(s,/** @type {Data} */ d)=>{
   const names=[['Bogle','LEE'],['Tarkowski','EVE'],['De Cuyper','BHA'],['Gvardiol','MCI']];
   const team=Object.fromEntries(d.teams.map(t=>[t.s,t]));
   const fix=Object.fromEntries(d.horizon.rows.map(r=>{const a=r.d.flat();return [r.s,a.reduce((x,f)=>x+f.r,0)/a.length]}));
   const rows=names.map(([n,t])=>{
     const p=d.players.find(q=>q.n===n&&q.t===t), tm=team[t], gap=tm.ga-tm.xga, f=fix[t];
+    if(!p)throw new Error(`s10-decision: ${n} (${t}) is not in the dataset`);
     return {n,t,p,gap,f,luck:gap<=-3,hard:f>=3.3};
   });
-  const cell=(txt,flag)=>`<td align="right" style="padding:22px 18px;font-size:38px;${flag?`color:${RED};font-weight:700`:''}">${txt}</td>`;
+  const cell=(/** @type {string} */ txt,/** @type {boolean|undefined} */ flag)=>`<td align="right" style="padding:22px 18px;font-size:38px;${flag?`color:${RED};font-weight:700`:''}">${txt}</td>`;
   const head=['Defender','Price','Points per £m','Goals against vs expected','Next-5 difficulty'].map((h,i)=>`<th style="text-align:${i?'right':'left'};padding:10px 18px;font-size:26px;color:var(--muted);font-weight:600">${h}</th>`).join('');
-  const body=rows.map(r=>`<tr style="border-top:1px solid var(--line)"><td style="padding:22px 18px;font-size:38px;font-weight:700">${esc(r.n)} <span style="color:var(--muted);font-weight:400">${r.t}</span></td>${[[gm(r.p.c)],[(r.p.pts/r.p.c).toFixed(1)],[(r.gap>0?'+':'')+r.gap.toFixed(1)+(r.luck?' ⚑':''),r.luck],[r.f.toFixed(1)+(r.hard?' ⚑':''),r.hard]].map(([v,f])=>cell(v,f)).join('')}</tr>`).join('');
+  const body=rows.map(r=>`<tr style="border-top:1px solid var(--line)"><td style="padding:22px 18px;font-size:38px;font-weight:700">${esc(r.n)} <span style="color:var(--muted);font-weight:400">${r.t}</span></td>${/** @type {[string,boolean?][]} */ ([[gm(r.p.c)],[(r.p.pts/r.p.c).toFixed(1)],[(r.gap>0?'+':'')+r.gap.toFixed(1)+(r.luck?' ⚑':''),r.luck],[r.f.toFixed(1)+(r.hard?' ⚑':''),r.hard]]).map(([v,f])=>cell(v,f)).join('')}</tr>`).join('');
   $('#chart-decision').innerHTML=`<table style="width:100%;border-collapse:collapse"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 });
 

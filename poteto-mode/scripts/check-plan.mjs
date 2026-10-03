@@ -35,14 +35,17 @@ if (!file) {
 }
 
 const raw = fs.readFileSync(file, "utf8").split(/\r?\n/);
+/** @type {string[]} */
 const problems = [];
-const fail = (line, message) => problems.push(`${file}:${line}: ${message}`);
+const fail = (/** @type {number} */ line, /** @type {string} */ message) => problems.push(`${file}:${line}: ${message}`);
 
 let start = 0;
 if (raw[0] === "---") {
 	start = raw.indexOf("---", 1) + 1;
 }
 
+/** @typedef {{ n: number, text: string, code: boolean }} Line */
+/** @type {Line[]} */
 const lines = [];
 let fence = false;
 for (let i = start; i < raw.length; i++) {
@@ -60,16 +63,18 @@ for (let i = start; i < raw.length; i++) {
 	if (/: \S/.test(prose)) fail(n, "mid-sentence colon");
 }
 
-const h2 = (l) => (!l.code && l.text.startsWith("## ") ? l.text.slice(3).trim() : null);
+const h2 = (/** @type {Line} */ l) => (!l.code && l.text.startsWith("## ") ? l.text.slice(3).trim() : null);
+/** @typedef {{ title: string, n: number, body: Line[] }} Section */
+/** @type {Section[]} */
 const sections = [];
 for (const l of lines) {
 	const title = h2(l);
 	if (title !== null) sections.push({ title, n: l.n, body: [] });
-	else if (sections.length) sections.at(-1).body.push(l);
+	else if (sections.length) sections[sections.length - 1].body.push(l);
 }
-const find = (title) => sections.find((s) => s.title === title);
-const bodyText = (s) => s.body.map((l) => l.text).join("\n");
-const boxes = (ls) => ls.filter((l) => !l.code && BOX.test(l.text)).map((l) => ({ n: l.n, text: l.text.match(BOX)[1] }));
+const find = (/** @type {string} */ title) => sections.find((s) => s.title === title);
+const bodyText = (/** @type {Section} */ s) => s.body.map((l) => l.text).join("\n");
+const boxes = (/** @type {Line[]} */ ls) => ls.filter((l) => !l.code && BOX.test(l.text)).map((l) => ({ n: l.n, text: /** @type {RegExpMatchArray} */ (l.text.match(BOX))[1] }));
 
 const h1 = lines.findIndex((l) => !l.code && l.text.startsWith("# "));
 if (h1 === -1) fail(1, "no H1 title");
@@ -101,25 +106,28 @@ else {
 
 const close = find("Close the program");
 if (!close) fail(1, 'no "## Close the program" section');
-const programIndex = sections.indexOf(program);
-const closeIndex = sections.indexOf(close);
+const programIndex = program ? sections.indexOf(program) : -1;
+const closeIndex = close ? sections.indexOf(close) : -1;
 const prSections = programIndex === -1 || closeIndex === -1 ? [] : sections.slice(programIndex + 1, closeIndex);
 if (prSections.length === 0) fail(1, "no PR sections between Program checklist and Close the program");
 
+/** @type {string[]} */
 const report = [];
 for (const pr of prSections) {
+	/** @type {{ name: string, n: number, rest: string, lines: Line[] }[]} */
 	const heads = [];
 	for (const l of pr.body) {
 		if (l.code) continue;
 		const m = l.text.match(/^\*\*([^*]+)\*\*(.*)$/);
 		if (m && SUB_BLOCKS.includes(m[1])) heads.push({ name: m[1], n: l.n, rest: m[2].trim(), lines: [] });
-		else if (heads.length) heads.at(-1).lines.push(l);
+		else if (heads.length) heads[heads.length - 1].lines.push(l);
 	}
 	const names = heads.map((h) => h.name);
 	if (names.join("|") !== SUB_BLOCKS.join("|")) {
 		fail(pr.n, `${pr.title}: sub-blocks are [${names.join(", ")}], expected [${SUB_BLOCKS.join(", ")}]`);
 	}
-	const block = (name) => heads.find((h) => h.name === name);
+	const block = (/** @type {string} */ name) => heads.find((h) => h.name === name);
+	/** @type {Record<string, number>} */
 	const counts = {};
 	for (const h of heads) counts[h.name] = boxes(h.lines).length;
 
@@ -138,7 +146,7 @@ for (const pr of prSections) {
 	if (live) {
 		if (!LANES.test(live.rest)) fail(live.n, `${pr.title}: Verify, live lacks "Ten lanes on \`<swarm workers model>\` at the PR head" with the model filled in`);
 		const lanes = boxes(live.lines).map((b) => ({ ...b, m: b.text.match(/^Lane (\d+)\. /) }));
-		const numbers = lanes.filter((b) => b.m).map((b) => Number(b.m[1])).sort((a, b) => a - b);
+		const numbers = lanes.flatMap((b) => (b.m ? [Number(b.m[1])] : [])).sort((a, b) => a - b);
 		if (numbers.join(",") !== "1,2,3,4,5,6,7,8,9,10") fail(live.n, `${pr.title}: lanes are [${numbers.join(",")}], expected 1 to 10`);
 		for (const lane of lanes) {
 			if (!lane.m) fail(lane.n, `${pr.title}: live box is not a lane`);
@@ -172,7 +180,7 @@ for (const pr of prSections) {
 	report.push(`${pr.title}  boxes=${total}  ${cells.join(" ")}`);
 }
 
-if (closeIndex !== -1) {
+if (close && closeIndex !== -1) {
 	const tail = sections.slice(closeIndex + 1);
 	for (const s of tail) {
 		if (!s.title.startsWith("Appendix")) fail(s.n, `"## ${s.title}" after Close the program is not an appendix`);

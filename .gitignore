@@ -7,3 +7,7 @@
 *.swp
 *~
 poteto-mode/scripts/node_modules/
+
+# Type-check tooling (package.json), installed by npm ci; the page scripts copied for type checking.
+node_modules/
+.typecheck/

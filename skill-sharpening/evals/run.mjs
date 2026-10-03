@@ -11,8 +11,20 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadSkills } from "../scripts/lib/skills.mjs";
 
+/** @import { Skill } from "../scripts/lib/skills.mjs" */
+/** @import { default as AnthropicClient } from "@anthropic-ai/sdk" */
+/** @import { MessageCreateParamsNonStreaming, MessageParam } from "@anthropic-ai/sdk/resources/messages" */
+/** @import { ZodType } from "zod" */
+/** @typedef {{ id: string, prompt: string, expect: string[] }} TriggerCase */
+/** @typedef {{ role: "user" | "assistant", content: string }} Turn */
+/** @typedef {{ id: string, prompt: string, history?: Turn[], assertions: string[] }} BehaviorCase */
+/** @typedef {{ file: string, skill: string, cases: BehaviorCase[] }} BehaviorSuite */
+/** @typedef {{ system: string, messages: MessageParam[] }} Prompt */
+/** @typedef {NonNullable<NonNullable<MessageCreateParamsNonStreaming["output_config"]>["effort"]>} Effort */
+
 const here = dirname(fileURLToPath(import.meta.url));
 const repository = resolve(here, "..", "..");
+/** @type {Record<string, [number, number]>} */
 const PRICES = { "claude-opus-5-5": [4, 20], "claude-sonnet-5-5": [2, 10], "claude-haiku-4-5": [1, 5] }; // $ per million tokens, input/output
 
 const [command, ...rest] = process.argv.slice(2);
@@ -20,7 +32,9 @@ const options = parseOptions(rest);
 const skills = loadSkills(repository);
 const skillNames = new Set(skills.map((skill) => skill.dirName));
 
+/** @param {string[]} list */
 function parseOptions(list) {
+  /** @type {{ model: string, judgeModel: string, effort: Effort | undefined, concurrency: number, runs: number, baseline: boolean, skill: string | undefined, only: string | undefined }} */
   const parsed = {
     model: "claude-opus-5-5",
     judgeModel: "claude-opus-5-5",
@@ -36,7 +50,8 @@ function parseOptions(list) {
     const value = () => list[++index];
     if (flag === "--model") parsed.model = value();
     else if (flag === "--judge-model") parsed.judgeModel = value();
-    else if (flag === "--effort") parsed.effort = value();
+    // Passed through as given; the API rejects a level it does not know.
+    else if (flag === "--effort") parsed.effort = /** @type {Effort} */ (value());
     else if (flag === "--concurrency") parsed.concurrency = Number(value());
     else if (flag === "--runs") parsed.runs = Number(value());
     else if (flag === "--baseline") parsed.baseline = true;
@@ -49,10 +64,12 @@ function parseOptions(list) {
 
 // ---------- eval files ----------
 
+/** @returns {TriggerCase[]} */
 function loadTriggerCases() {
   return JSON.parse(readFileSync(join(here, "triggers.json"), "utf8")).cases;
 }
 
+/** @returns {BehaviorSuite[]} */
 function loadBehaviorSuites() {
   const directory = join(here, "cases");
   return readdirSync(directory)
@@ -62,9 +79,11 @@ function loadBehaviorSuites() {
 }
 
 function check() {
+  /** @type {string[]} */
   const problems = [];
+  /** @type {Set<string>} */
   const ids = new Set();
-  const seen = (id, where) => {
+  const seen = (/** @type {string} */ id, /** @type {string} */ where) => {
     if (!id) problems.push(`${where}: case has no id`);
     else if (ids.has(id)) problems.push(`${where}: duplicate case id ${id}`);
     ids.add(id);
@@ -109,10 +128,16 @@ function check() {
 
 // ---------- model calls ----------
 
+// Loaded by setup(), only for the paid evals: `check` runs without the SDK installed.
+/** @type {AnthropicClient} */
 let client;
+/** @type {typeof AnthropicClient} */
 let Anthropic;
+/** @type {typeof import("zod").z} */
 let z;
+/** @type {typeof import("@anthropic-ai/sdk/helpers/zod").zodOutputFormat} */
 let zodOutputFormat;
+/** @type {Record<string, { input: number, output: number }>} */
 const usage = {};
 
 async function setup() {
@@ -122,18 +147,22 @@ async function setup() {
   client = new Anthropic({ maxRetries: 4 });
 }
 
+/** @param {string} model @param {{ usage: AnthropicClient.Usage }} response */
 function track(model, response) {
   const entry = (usage[model] ??= { input: 0, output: 0 });
   entry.input += response.usage.input_tokens + (response.usage.cache_read_input_tokens ?? 0) + (response.usage.cache_creation_input_tokens ?? 0);
   entry.output += response.usage.output_tokens;
 }
 
+/** @param {string} model @param {Prompt & { output_config?: MessageCreateParamsNonStreaming["output_config"] }} fields */
 function request(model, fields) {
+  /** @type {MessageCreateParamsNonStreaming} */
   const body = { model, max_tokens: 16000, ...fields };
   if (options.effort) body.output_config = { ...body.output_config, effort: options.effort };
   return body;
 }
 
+/** @param {string} model @param {Prompt} fields */
 async function ask(model, fields) {
   const response = await client.messages.create(request(model, fields));
   track(model, response);
@@ -141,6 +170,11 @@ async function ask(model, fields) {
   return response.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
 }
 
+/**
+ * @template {ZodType} S
+ * @param {string} model @param {Prompt} fields @param {S} schema
+ * @returns {Promise<import("zod").infer<S>>}
+ */
 async function askStructured(model, fields, schema) {
   const response = await client.messages.parse(request(model, { ...fields, output_config: { format: zodOutputFormat(schema) } }));
   track(model, response);
@@ -149,16 +183,24 @@ async function askStructured(model, fields, schema) {
   return response.parsed_output;
 }
 
+/**
+ * Runs worker over items, options.concurrency at a time; a failed item's result is { error }.
+ * @template T, R
+ * @param {T[]} items @param {(item: T) => Promise<R>} worker
+ * @returns {Promise<((R & { error?: undefined }) | ({ error: string } & { [K in keyof R]?: undefined }))[]>}
+ */
 async function pool(items, worker) {
+  /** @type {((R & { error?: undefined }) | ({ error: string } & { [K in keyof R]?: undefined }))[]} */
   const results = new Array(items.length);
   let next = 0;
   const lanes = Array.from({ length: Math.max(1, options.concurrency) }, async () => {
     while (next < items.length) {
       const index = next++;
       try {
-        results[index] = await worker(items[index]);
+        // A worker's result never has an error field; only a failure does.
+        results[index] = /** @type {R & { error?: undefined }} */ (await worker(items[index]));
       } catch (failure) {
-        results[index] = { error: failure instanceof Anthropic.APIError ? `${failure.status} ${failure.message}` : String(failure.message ?? failure) };
+        results[index] = { error: failure instanceof Anthropic.APIError ? `${failure.status} ${failure.message}` : String(/** @type {Error} */ (failure).message ?? failure) };
       }
       process.stderr.write(".");
     }
@@ -168,10 +210,12 @@ async function pool(items, worker) {
   return results;
 }
 
+/** @template {object} C @param {C[]} cases */
 function repeated(cases) {
   return cases.flatMap((testCase) => Array.from({ length: options.runs }, (_, run) => ({ ...testCase, run })));
 }
 
+/** @param {string} kind @param {object} data */
 function save(kind, data) {
   const directory = join(here, "results");
   mkdirSync(directory, { recursive: true });
@@ -233,6 +277,7 @@ async function triggers() {
 
 const NO_TOOLS = "You cannot run tools or read files in this conversation. If you would normally run a command or open a file, say so in one line and continue as far as you can.";
 
+/** @param {Skill | null | undefined} skill */
 function candidateSystem(skill) {
   if (!skill) return `You are a coding agent.\n\n${NO_TOOLS}`;
   return [
@@ -246,12 +291,14 @@ function candidateSystem(skill) {
   ].join("\n");
 }
 
+/** @param {BehaviorCase} testCase */
 function context(testCase) {
   if (!testCase.history?.length) return "";
   const turns = testCase.history.map((turn) => `<${turn.role}>\n${turn.content}\n</${turn.role}>`).join("\n");
   return `<earlier-conversation>\n${turns}\n</earlier-conversation>\n\n`;
 }
 
+/** @param {BehaviorCase} testCase @param {string} answer */
 async function grade(testCase, answer) {
   const verdict = z.object({
     results: z.array(z.object({ assertion: z.string(), pass: z.boolean(), evidence: z.string() })),
@@ -281,6 +328,7 @@ async function behavior() {
 
   const results = await pool(jobs, async (job) => {
     const system = candidateSystem(job.arm === "with-skill" ? bySkill.get(job.skill) : null);
+    /** @type {MessageParam[]} */
     const messages = [...(job.history ?? []), { role: "user", content: job.prompt }];
     const answer = await ask(options.model, { system, messages });
     const checks = await grade(job, answer);
@@ -312,6 +360,7 @@ async function behavior() {
 
 // ---------- entry ----------
 
+/** @type {Record<string, () => void | Promise<void>>} */
 const commands = { check, triggers, behavior };
 if (!commands[command]) {
   console.error("usage: node run.mjs <check|triggers|behavior> [--model M] [--judge-model M] [--effort low|medium|high]");

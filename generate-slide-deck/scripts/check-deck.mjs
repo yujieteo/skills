@@ -26,7 +26,7 @@ else {
   try {
     if (!Object.keys(JSON.parse(data[1])).length) problems.push("deck-data is empty");
   } catch (error) {
-    problems.push(`deck-data is not valid JSON: ${error.message}`);
+    problems.push(`deck-data is not valid JSON: ${/** @type {Error} */ (error).message}`);
   }
 }
 
