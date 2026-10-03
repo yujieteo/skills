@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseArgs, parseTsc, summarize } from "./typecheck.mjs";
+import { parseArgs, parseTsc, reportedFiles, summarize } from "./typecheck.mjs";
 
 const OUTPUT = [
   "b.mjs(3,5): error TS7006: Parameter 'x' implicitly has an 'any' type.",
@@ -49,4 +49,15 @@ test("parseArgs accepts the summary flags and refuses bad usage", () => {
   assert.throws(() => parseArgs(["--summary", "--file"]), /needs a value/);
   assert.throws(() => parseArgs(["--summary", "--first", "x"]), /whole number/);
   assert.throws(() => parseArgs(["--bogus"]), /unknown argument/);
+});
+
+test("reportedFiles maps a page to its copied inline scripts and keeps other paths", () => {
+  const page = "generate-visualization/examples/anscombe-quartet/index.html";
+  assert.deepEqual([...reportedFiles([page, "a.mjs"])], [page, ".typecheck/inline/generate-visualization-examples-anscombe-quartet-index-html.js", "a.mjs"]);
+});
+
+test("summarize points the --file hint at the top real file, never (config), and quotes odd paths", () => {
+  const out = summarize(parseTsc("error TS5023: a\nerror TS5023: b\nmy dir/x.mjs(1,1): error TS7006: c\n"));
+  assert.match(out, /--summary --file 'my dir\/x\.mjs'`/);
+  assert.doesNotMatch(out, /--file \(config\)/);
 });

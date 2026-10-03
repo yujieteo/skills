@@ -3,10 +3,10 @@
 // With no flags it prints tsc's own output. With --summary it writes the full tsc log to .typecheck/tsc.log and prints
 // a short TOON verdict instead: totals, error counts by code and by file (largest first, ties by name), and the first
 // errors in tsc's order. Exit codes: 0 no errors, 1 type errors, 2 usage or environment error.
-// Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>]]
+// Usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>]], where --first defaults to 20
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -16,7 +16,19 @@ const PAGES = [
   "generate-visualization/examples/anscombe-quartet/index.html",
 ];
 const LOG = ".typecheck/tsc.log";
-const USAGE = "usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>]]";
+const USAGE = "usage: npm run typecheck [-- --summary [--file <path>] [--since <ref>] [--first <n>, default 20]]";
+export const INLINE_DIR = ".typecheck/inline/";
+
+// The copy of a page's inline scripts that extract-inline.mjs writes and tsc reports errors under.
+/** @param {string} page */
+export const inlineFile = (page) => `${INLINE_DIR}${page.replace(/[^A-Za-z0-9]+/g, "-")}.js`;
+
+// The file names tsc reports for these repository paths: a page also stands for its copied inline scripts.
+/** @param {string[]} paths */
+export const reportedFiles = (paths) => new Set(paths.flatMap((p) => (PAGES.includes(p) ? [p, inlineFile(p)] : [p])));
+
+/** @param {string} path */
+const shellArg = (path) => (/^[\w./-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`);
 
 /** @typedef {{ file: string, line: number, col: number, code: string, message: string }} TscError */
 
@@ -83,7 +95,8 @@ export function summarize(errors, { scope = "all", first = 20, log = LOG } = {})
   lines.push(`log: ${log}`);
   const hints = [];
   if (errors.length) {
-    if (byFile.length > 1) hints.push(`Run \`npm run typecheck -- --summary --file ${byFile[0][0]}\` to see the errors of the top file`);
+    const top = byFile.find(([file]) => file !== "(config)");
+    if (byFile.length > 1 && top) hints.push(`Run \`npm run typecheck -- --summary --file ${shellArg(top[0])}\` to see the errors of the top file`);
     hints.push(`Read ${log} for the full tsc output`);
     hints.push("Run `npm run typecheck -- --summary` again after a fix");
   }
@@ -145,8 +158,10 @@ function main() {
   if (run.status !== 0 && !errors.length) return usageError(`tsc exited ${run.status} with no parsed errors; read ${LOG}`);
   const scope = [];
   if (args.file) {
-    const want = relative(ROOT, join(process.cwd(), args.file));
-    errors = errors.filter((e) => e.file === want);
+    const want = relative(ROOT, resolve(process.env.INIT_CWD ?? process.cwd(), args.file));
+    if (!existsSync(join(ROOT, want))) return usageError(`--file ${want} is not a file in the repository`);
+    const wanted = reportedFiles([want]);
+    errors = errors.filter((e) => wanted.has(e.file));
     scope.push(`file ${want}`);
   }
   if (args.since) {
@@ -154,7 +169,7 @@ function main() {
     try {
       // Changed tracked files plus new untracked ones, so a file not yet added still counts.
       const git = (/** @type {string[]} */ ...a) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" }).split("\n").filter(Boolean);
-      changed = new Set([...git("diff", "--name-only", args.since, "--"), ...git("ls-files", "--others", "--exclude-standard")]);
+      changed = reportedFiles([...git("diff", "--name-only", args.since, "--"), ...git("ls-files", "--others", "--exclude-standard")]);
     } catch {
       return usageError(`git diff failed for ${args.since}`);
     }

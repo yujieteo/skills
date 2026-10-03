@@ -15,7 +15,7 @@ npm ci && npm ci --prefix skill-sharpening/evals
 npm run typecheck
 ```
 
-When the type check fails, run `npm run typecheck -- --summary` instead of counting or sorting the tsc output by hand. It writes the full log to `.typecheck/tsc.log` and prints a short TOON summary: the totals, the error counts by code and by file, and the first 20 errors. Add `--file <path>` for one file, `--since <ref>` for only the files changed since a git ref, or `--first <n>` for more or fewer errors. The exit code is 0 for no errors, 1 for type errors, and 2 for a usage or setup error.
+When the type check fails, run `npm run typecheck -- --summary` instead of counting or sorting the tsc output by hand. It writes the full log to `.typecheck/tsc.log` and prints a short TOON summary: the totals, the error counts by code and by file, and the first 20 errors. Add `--file <path>` for one file, `--since <ref>` for only the files changed since a git ref, or `--first <n>` for more or fewer errors than the default of 20. The exit code is 0 for no errors, 1 for type errors, and 2 for a usage or setup error.
 
 The same checks run in CI. If you changed the linter itself, also run its tests: `node --test skill-sharpening/scripts/verify-collection.test.mjs`. If you changed `skill-sharpening/scripts/typecheck.mjs`, run `node --test skill-sharpening/scripts/typecheck.test.mjs`. If you changed a skill's description or instructions, also run its evals (they call the Anthropic API):
 
