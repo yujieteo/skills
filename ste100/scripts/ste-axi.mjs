@@ -94,7 +94,7 @@ export function maskSkipped(s) {
   s = mask(s, /\b(?:https?|ftp):\/\/[^\s)>\]]+|\bwww\.[^\s)>\]]+/g);
   s = s.replace(/\]\([^)\n]*\)/g, (m) => "]" + " ".repeat(m.length - 1));
   s = mask(s, /"[^"\n]*"|“[^”\n]*”/g);
-  s = s.replace(/\b(?:e\.g|i\.e|etc|vs|cf)\./gi, (m) => m.replace(/\./g, " "));
+  s = s.replace(/\b(?:e\.g|i\.e|etc|vs|cf)\./gi, (m) => "X" + " ".repeat(m.length - 1));
   return s;
 }
 

@@ -72,6 +72,11 @@ test("skips fenced code, indented code, front matter and HTML", () => {
   assert.deepEqual(rules(text), []);
 });
 
+test("an abbreviation does not end a sentence or join a noun cluster", () => {
+  assert.deepEqual(rules("Use a tool, e.g. linter config file. Read it, i.e. the main config file."), []);
+  assert.equal(checkText("Use a tool, e.g. linter config file.", "t.md").sentences, 1);
+});
+
 test("skips inline code, URLs, link targets and quoted text", () => {
   assert.deepEqual(rules("Run `don't; running` and see https://x.org/a;running or [the doc](a_running.md)."), []);
   assert.deepEqual(rules('The user said "it\'s running; don\'t stop" to me.'), []);
