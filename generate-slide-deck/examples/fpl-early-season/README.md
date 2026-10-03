@@ -12,16 +12,20 @@ output for both skills and the hand-off copy for a later site change.
 | `data.json` | The compact dataset embedded in `index.html` (195 players, 20 clubs, five gameweeks of fixtures). |
 | `build-data.mjs` | Dependency-free Node script that fetches the public FPL API and writes `data.json`. |
 
-Intended site path: `decks/fpl-early-season/index.html`, copied verbatim, as
+Intended site path: `data/decks/fpl-early-season/index.html` in yujieteo/site,
+copied verbatim, as
 `generate-slide-deck` describes for publishing.
 
 ## View it
 
-Serve the folder over HTTP so the notes load, then open the printed address:
+Serve the folder over HTTP so the notes load:
 
 ```sh
 python3 -m http.server 8000
 ```
+
+Open `http://localhost:8000/`. Notes load only from localhost, not from the
+`[::]` or `0.0.0.0` address the server prints.
 
 `→` and `←` move, `N` shows notes, `P` opens the presenter window, `?` lists
 the keys.

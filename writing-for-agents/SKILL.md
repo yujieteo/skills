@@ -5,7 +5,7 @@ description: Writing documents for agents. Use when creating or editing skills, 
 
 Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
 
-When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, and router skills.
+When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, and router skills. When it is a brief, loop prompt or dispatched task that an agent runs without you, read [`BRIEFS.md`](BRIEFS.md).
 
 ## Context pointers
 
@@ -16,6 +16,8 @@ A pointer does two jobs: state what the material is, and list the **branches** t
 - **Front-load the leading word**: the pointer is where it does its triggering work.
 - **One trigger per branch.** Synonyms that rename a single branch are one branch written twice; collapse them and keep only genuinely distinct branches.
 - **Cut identity the body already carries.**
+
+**Route from one root.** In a repository, keep `AGENTS.md` to one pointer: start at the router (`SKILLS.md`), a table that maps each task to the one playbook that owns it and lists the few rules every task keeps, each rule linked to the file that owns its detail. The agent opens one playbook, never the whole tree.
 
 ## The two loads
 

@@ -8,7 +8,7 @@ The values are not new. They are the site's own tokens (`static/css/style.css` i
 
 ## Coverage
 
-The guide covers every visual in the site's catalogue (`data/visuals/*.yaml` in `yujieteo/site`), whether ported, pinned from `yujieteo/visuals` or built in the site (`fbd`), and every new one. One visual is exempt and keeps its own look:
+The guide covers every visual the site publishes, and every new one: each folder `viz/<slug>/` of `yujieteo/visuals` (its `visual.json` is its catalogue entry), and the two the site keeps itself in `visuals/<slug>/` with a stub `data/visuals/<slug>.yaml` (`beamdswitch` and `connes-qft`). One visual is exempt and keeps its own look:
 
 | Visual | Why it is exempt |
 |---|---|

@@ -1,20 +1,11 @@
 # Publish to the site
 
-Load at step 7, only when publishing is in scope. The visuals PR merges first; the site is a second PR because the site CI pins a visuals commit.
+Load at step 7. The trainer is one folder `viz/<slug>/` of the yujieteo/visuals monorepo, and yujieteo/site builds every such folder from its visuals checkout. There is no site pull request, catalogue stub or pinned commit.
 
 ## Visuals PR
 
-Files: `data/<slug>/`, `scripts/build_<slug>.py`, `viz/<slug>/index.html`, the regenerated gallery and README row. PR body starts with the assumptions and follow-ups, then intent, changes, testing evidence. Never merge without the owner.
+Files: everything in `viz/<slug>/` only: the data, `build.py`, the generated `index.html`, `visual.json` (`tags: [pokemon, vgc, strategy, training]`, `webmcp_tools: [get_data, get_metadata, query]`, `summary` the same as the page description), the agent card `SKILLS.md`, `AGENTS.md`, `tests/` and `e2e/manifest.json`, as [visual-folder.md](../../generate-visualization/references/visual-folder.md) says. Run `python3 scripts/check.py <slug>` and `python3 scripts/check_repo.py` from the monorepo root. The PR body starts with the assumptions and follow-ups, then intent, changes, testing evidence. A new trainer adds a builder and tests, so it takes the full review pipeline (**review-by-risk**). Never merge without the owner.
 
-## Site PR
+## Deploy (only if asked)
 
-Follow [site-integration](../../generate-visualization/references/site-integration.md) for the stub and build. For a trainer:
-
-1. Stub `data/visuals/<slug>.yaml`: `slug`, `title`, `summary` (same as the page description), `source_url`, `fetched`, `html_path`, `data_path` (`raw.json`), `webmcp_tools: [get_data, get_metadata, query]`, `tags: [pokemon, vgc, strategy, training]`, `category`.
-2. Check out visuals at the merged commit and bump the CI `ref:` on the visuals checkout step to that full SHA.
-3. Build from the site repo root with `.venv/bin/python scripts/validate.py` then `.venv/bin/python scripts/build.py`. `build.py` finds the visuals checkout as a sibling by default; set `VISUALS_REPO=<path>` only to override that default. Then `git diff --exit-code -- site` must be clean. Commit the generated files it produced, including the corpus revision metadata it refreshes. Never hand-edit them.
-4. Verify locally: gallery entry, page, `data.json` return 200; the page matches the pinned source byte for byte; no console errors.
-
-## Deploy
-
-Deploy and checksum steps are in [deploy](../../generate-visualization/references/deploy.md). Get the destination from the owner at run time; stop and ask if it is missing. Report the deployed files and checksums, or say deploy is not done.
+After the visuals PR merges, follow the site's own `SKILLS.md` deploy playbook: it builds from the visuals checkout at the merged commit, uploads, and runs the post-deploy checks. Get the destination from the owner at run time; stop and ask if it is missing. Report the visuals commit the build read and the deploy result, or say deploy is not done.

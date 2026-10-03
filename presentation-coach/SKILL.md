@@ -69,7 +69,9 @@ window (`P`) and shows nothing to the audience by default.
    `node scripts/check-notes.mjs <deck.html> <notes.md>`. It verifies slide
    coverage and order, required fields, and the time budget. Fix every
    problem it lists.
-8. **See it work.** With the deck served over HTTP, open it, press `N`, and
+8. **See it work.** Serve the deck over HTTP (`python3 -m http.server 8000`)
+   and open it at `http://localhost:8000/`. Notes load only from localhost,
+   not from the `[::]` or `0.0.0.0` address the server prints. Press `N` and
    step through: each slide's notes should load and match the slide. Press
    `P` to confirm the presenter window shows the same notes and a timer. Load
    the deck without pressing anything and confirm the audience view shows no
