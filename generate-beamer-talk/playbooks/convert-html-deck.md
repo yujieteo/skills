@@ -1,7 +1,7 @@
 # Playbook: HTML deck to beamer talk
 
-Source: `visuals/decks/<slug>/` from `generate-slide-deck` (`index.html`,
-`data.json`, `notes.md`). Target: `template/talks/<slug>/talk.tex`.
+Source: `decks/<slug>/` from `generate-slide-deck`, in the repository the user
+names (`index.html`, `data.json`, `notes.md`). Target: `template/talks/<slug>/talk.tex`.
 
 1. **Outline the deck.** Run `presentation-coach`'s `scripts/outline.mjs` on
    `index.html` for slide ids, titles and static text. Read `notes.md`.

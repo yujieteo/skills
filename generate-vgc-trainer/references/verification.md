@@ -16,7 +16,7 @@ Assert, at least: source ids resolve and `meta.sources` equals `raw.sources`; te
 
 ## 3. Browser
 
-Technical browser E2E belongs in the dedicated technical E2E repository ([test ownership](../../interactive-visual-spec/references/test-ownership.md), §28). That repository does not exist yet; until it does, these checks stand in for it here, and they move there when it is created.
+Technical browser E2E lives in `viz/<slug>/e2e/` of yujieteo/visuals (`manifest.json`, and `full.test.mjs` for fuller checks), driven by the shared harness in the monorepo's `e2e/`, which came from the archived yujieteo/technical-e2e ([test ownership](../../interactive-visual-spec/references/test-ownership.md), §28). Write the trainer's checks there; the steps below are the browser checks to run by hand before the PR.
 
 Serve the repo (`python3 -m http.server`) and use `chrome-devtools-axi`.
 
