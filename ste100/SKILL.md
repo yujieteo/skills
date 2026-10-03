@@ -111,7 +111,7 @@ Do not read the full text again for the rules that the checker covers.
 The checker does not check these parts of a text:
 
 - Front matter, fenced code, indented code and HTML lines.
-- Inline code, URLs, link targets and quoted text.
+- Inline code, URLs, link targets, quoted text and the abbreviations `e.g.`, `i.e.`, `etc.`, `vs.` and `cf.`.
 - Technical names. A technical name has a capital letter after the first letter, a digit, `_`, `/` or `.` in it.
 - Capitalized words in the middle of a sentence.
 
