@@ -203,7 +203,9 @@ function main() {
     if (run.error) return usageError(`tsc did not start: ${run.error.message}`);
     process.exit(run.status === 0 ? 0 : run.status === 2 || run.status === 1 ? 1 : 2);
   }
-  const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json", "--pretty", "false", "--listFiles"], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 28 });
+  // tsc builds --listFiles paths from PWD, so a checkout reached through a symlink (macOS /tmp) would not match ROOT.
+  const env = { ...process.env, PWD: ROOT };
+  const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json", "--pretty", "false", "--listFiles"], { cwd: ROOT, env, encoding: "utf8", maxBuffer: 1 << 28 });
   if (run.error) return usageError(`tsc did not start: ${run.error.message}`);
   mkdirSync(join(ROOT, ".typecheck"), { recursive: true });
   writeFileSync(join(ROOT, LOG), run.stdout + run.stderr);
